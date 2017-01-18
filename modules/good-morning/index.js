@@ -1,5 +1,5 @@
 const utils = require('./../../services/utils');
-const words = ['love', 'amour', 'kiss', 'xxx'];
+const words = ['coucou', 'hello', 'yo', 'cc', 'salut', 'yop', 'hey'];
 
 module.exports = client => {
     client.on('message', message => {
@@ -9,7 +9,7 @@ module.exports = client => {
         }
 
         if (utils.matchOneOf(words, message.content)) {
-            message.react('❤');
+            message.reply(utils.getRandomlyOneOf(words));
         }
     });
 }
