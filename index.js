@@ -10,5 +10,7 @@ client.on('ready', () => {
 require('./modules/ping')(client);
 require('./modules/love')(client);
 require('./modules/good-morning')(client);
+require('./modules/kaamelott')(client);
+require('./modules/captain')(client);
 
 client.login(config.token);
