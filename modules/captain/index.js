@@ -3,9 +3,6 @@ const utils = require('./../../services/utils');
 const words = ['Aaar!', 'Oy oy', 'Yaarr!', 'Yo ho ho', 'Ahoy!', 'Yaarrahah!'];
 
 module.exports = client => {
-    /**
-     * Response pong when someone says ping
-     */
     client.on('message', message => {
         // Do nothing if is a bot's message
         if (message.author.id === client.user.id) {
