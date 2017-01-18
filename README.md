@@ -4,9 +4,17 @@ Discord bot for beaujeuteam
 
 ## Installation
 
-Create a config.json like `config.json.dist`. And type your access token.
+Create a config.json like `config.json.dist`. And type your access token like :
+```json
+{
+    "token": "your-token"
+}
+```
+
+And install and start the bot
 
 ```
+$ npm install
 $ node index.js
 ```
 
@@ -48,7 +56,7 @@ client.login('token');
 
 ### Utils
 
-Utils is a service with many function to match text
+Utils is a service with many function to match text and other stuff.
 
 * matchEvery(pattern, string): check if `string` match some `pattern`
     * Example : ```utils.matchEvery('apple', 'I want to eat an Apple and a Pineapple') //return true```
