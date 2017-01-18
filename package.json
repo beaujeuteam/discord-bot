@@ -11,5 +11,8 @@
   "license": "ISC",
   "publish": {
       "ip": "92.222.88.16"
+  },
+  "dependencies": {
+    "discord.js": "^11.0.0"
   }
 }
