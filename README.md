@@ -2,6 +2,14 @@
 
 Discord bot for beaujeuteam
 
+## Installation
+
+Create a config.json like `config.json.dist`. And type your access token.
+
+```
+$ node index.js
+```
+
 ## Contributing
 
 To create a new module, create folder into `modules` folder and create a `index.js` file into your folder.
