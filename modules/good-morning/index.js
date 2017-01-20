@@ -1,5 +1,5 @@
 const utils = require('./../../services/utils');
-const words = ['coucou', 'hello', 'yo', 'cc', 'salut', 'yop', 'hey'];
+const words = ['coucou', 'hello', 'salut', 'yop', 'hey'];
 
 module.exports = client => {
     client.on('message', message => {

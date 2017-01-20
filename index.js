@@ -12,5 +12,6 @@ require('./modules/love')(client);
 require('./modules/good-morning')(client);
 require('./modules/kaamelott')(client);
 require('./modules/captain')(client);
+require('./modules/meteo')(client);
 
 client.login(config.token);
