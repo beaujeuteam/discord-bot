@@ -77,6 +77,9 @@ Utils is a service with many function to match text and other stuff.
     * Example : ```utils.matchExactlyOneOf(['apple', 'pineapple'], 'Apple') //return false```
 
 * getRandomlyOneOf(list[]): get one element of `list` ramdomly
+* command(cmd, string): match `string` and return ouput of `command`
+    * Example ```utils.command('/roll ([0-9]+)d([0-9]+)', '1d10') // return [1, 10]```
+* random(max, min = 1): return a random number between `min` and `max`
 
 Another Example
 

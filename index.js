@@ -13,5 +13,6 @@ require('./modules/good-morning')(client);
 require('./modules/kaamelott')(client);
 require('./modules/captain')(client);
 require('./modules/meteo')(client);
+require('./modules/roll')(client);
 
 client.login(config.token);
