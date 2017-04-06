@@ -14,5 +14,8 @@ require('./modules/kaamelott')(client);
 require('./modules/captain')(client);
 require('./modules/meteo')(client);
 require('./modules/roll')(client);
+require('./modules/voice')(client);
+require('./modules/player')(client);
+require('./modules/playlist')(client);
 
 client.login(config.token);

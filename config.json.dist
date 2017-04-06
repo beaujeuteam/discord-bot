@@ -1,3 +1,11 @@
 {
-    "token": "MY-TOKEN"
+    "token": "MY-TOKEN",
+    "tts_token": "TTS_TOKEN",
+    "db": {
+        "host": "",
+        "dbname": "",
+        "user": "",
+        "password": "",
+        "port": "27017"
+    }
 }

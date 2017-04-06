@@ -27,7 +27,7 @@ module.exports = {
     },
 
     command: (command, string) => {
-        const cmd = string.match(command);
+        const cmd = string.match(`^${command}`);
 
         if (cmd) {
             const result = [];
