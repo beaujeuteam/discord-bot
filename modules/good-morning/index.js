@@ -9,6 +9,7 @@ module.exports = client => {
         }
 
         if (utils.matchOneOf(words, message.content)) {
+            client.logger.debug(`Module good-morning match something`);
             message.reply(utils.getRandomlyOneOf(words));
         }
     });

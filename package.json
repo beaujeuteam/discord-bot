@@ -12,9 +12,12 @@
   "author": "Kevin Balicot <kevinbalicot@gmail.com>",
   "license": "ISC",
   "publish": {
-    "ip": "92.222.88.16",
+    "ssh": {
+      "ip": "92.222.88.16",
+      "user": "root"
+    },
     "image": "letsxo/node-ffmpeg",
-    "customPort": "9000"
+    "port": "9000"
   },
   "dependencies": {
     "discord.js": "^11.0.0",

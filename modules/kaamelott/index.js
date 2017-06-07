@@ -12,7 +12,11 @@ module.exports = client => {
         }
 
         if (utils.matchExactlyOne('/kaamelott', message.content)) {
+            client.logger.debug(`Module kaamelott match command "/kaamelott"`);
+
             request(apiUrl, (err, res, body) => {
+                client.logger.request(apiUrl, res);
+
                 if (!err && res.statusCode == 200) {
                     message.channel.sendMessage(JSON.parse(body).quote || 'C\'est pas faux.');
                 }

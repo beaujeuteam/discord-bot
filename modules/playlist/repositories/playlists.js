@@ -3,9 +3,13 @@ const DB = require('./../../../services/db');
 
 class PlaylistsRepository {
 
+    constructor() {
+        this.collection = 'discord_playlists';
+    }
+
     find() {
         return new Promise((resolve, reject) => {
-            DB.db.collection('playlists').find({}).toArray((error, results) => {
+            DB.db.collection(this.collection).find({}).toArray((error, results) => {
                 if (!!error) {
                     return reject(error);
                 }
@@ -16,7 +20,7 @@ class PlaylistsRepository {
 
     insert(data, options = {}) {
         return new Promise((resolve, reject) => {
-            DB.db.collection('playlists').insert(data, options, (error, results) => {
+            DB.db.collection(this.collection).insert(data, options, (error, results) => {
                 if (!!error) {
                     return reject(error);
                 }
@@ -27,7 +31,7 @@ class PlaylistsRepository {
 
     update (data, options = {}) {
         return new Promise((resolve, reject) => {
-            DB.db.collection('playlists').update({ _id: new MongoObjectID(data._id) }, data, options, (error, results) => {
+            DB.db.collection(this.collection).update({ _id: new MongoObjectID(data._id) }, data, options, (error, results) => {
                 if (!!error) {
                     return reject(error);
                 }

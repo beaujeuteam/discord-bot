@@ -10,27 +10,22 @@ module.exports = client => {
             return;
         }
 
-        const playUrlCommand = utils.command('/play (.*)', message.content);
-        const stopCommand = utils.command('/stop', message.content);
-        const pauseCommand = utils.command('/pause', message.content);
-        const volumeCommand = utils.command('/volume ([0-9\.]+)', message.content);
-
-        if (playUrlCommand) {
-            voiceClient.playUrl(playUrlCommand[0]).then(stream => {
+        utils.command('/play (.*)', message.content, result => {
+            voiceClient.playUrl(result[0]).then(stream => {
                 stream.on('error', error => message.reply(error));
             });
-        }
+        });
 
-        if (stopCommand) {
+        utils.command('/stop', message.content, () => {
             voiceClient.stop();
-        }
+        });
 
-        if (pauseCommand) {
+        utils.command('/pause', message.content, () => {
             voiceClient.pause();
-        }
+        });
 
-        if (volumeCommand) {
-            voiceClient.setVolume(volumeCommand[0]);
-        }
+        utils.command('/volume ([0-9\.]+)', message.content, result => {
+            voiceClient.setVolume(result[0]);
+        });
     });
 };

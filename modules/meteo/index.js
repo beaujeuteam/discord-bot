@@ -49,7 +49,11 @@ module.exports = client => {
         }
 
         if (utils.matchExactlyOne('/meteo', message.content)) {
+            client.logger.debug(`Module meteo match command "/meteo"`);
+
             request(apiUrl, (err, res, body) => {
+                client.logger.request(apiUrl, res);
+
                 if (!err && res.statusCode == 200) {
                     const data = JSON.parse(body);
                     const weather = data.weather[0];

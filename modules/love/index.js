@@ -9,6 +9,8 @@ module.exports = client => {
         }
 
         if (utils.matchOneOf(words, message.content)) {
+            client.logger.debug(`Module love match somthing`);
+
             message.react('❤');
         }
     });

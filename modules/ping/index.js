@@ -11,10 +11,14 @@ module.exports = client => {
         }
 
         if (utils.matchEvery('ping', message.content)) {
+            client.logger.debug(`Module ping match "ping"`);
+
             message.reply('pong');
         }
 
         if (utils.matchEvery('pong', message.content)) {
+            client.logger.debug(`Module pong match "pong"`);
+
             message.reply('ping!');
         }
     });

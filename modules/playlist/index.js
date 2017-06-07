@@ -30,16 +30,19 @@ module.exports = client => {
             return;
         }
 
-        const listCommand = utils.command('/playlist list', message.content);
-        const listTracksCommand = utils.command('/playlist list ([a-zA-Z0-9_]+)', message.content);
-        const playTrackCommand = utils.command('/playlist play #([0-9]+)', message.content);
-        const playCommand = utils.command('/playlist play ([a-zA-Z0-9_]+)', message.content);
-        const addCommand = utils.command('/playlist add ([a-zA-Z0-9_]+) (.*)', message.content);
-        const nextCommand = utils.command('/playlist next', message.content);
-        const randomizeCommand = utils.command('/playlist randomize', message.content);
+        utils.command('/playlist list', message.content, () => {
+            if (0 === playlists.length) {
+                return message.channel.sendMessage(`Aucune playlist.`);
+            }
 
-        if (listTracksCommand) {
-            const search = listTracksCommand[0];
+            let result = '';
+            playlists.forEach(playlist => result += `- ${playlist.name}\n`);
+
+            return message.channel.sendMessage(`Les playlist :\n${result}`);
+        });
+
+        utils.command('/playlist list ([a-zA-Z0-9_]+)', message.content, result => {
+            const search = result[0];
             const playlist = playlists.find(playlist => playlist.name === search);
 
             if (!!playlist) {
@@ -50,21 +53,36 @@ module.exports = client => {
             }
 
             return message.channel.sendMessage(`Aucune playlist "${search}" trouvée.`);
-        }
+        });
 
-        if (listCommand) {
-            if (0 === playlists.length) {
-                return message.channel.sendMessage(`Aucune playlist.`);
+        utils.command('/playlist play #([0-9]+)', message.content, result => {
+            const playlist = playlists.find(playlist => playlist.currentPlaylist);
+
+            if (!!playlist) {
+                return playlist.play(message.channel, parseInt(result[0]) - 1);
             }
 
-            let result = '';
-            playlists.forEach(playlist => result += `- ${playlist.name}\n`);
+            return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
+        });
 
-            return message.channel.sendMessage(`Les playlist :\n${result}`);
-        }
+        utils.command('/playlist play ([a-zA-Z0-9_]+)', message.content, result => {
+            playlists.forEach(playlist => playlist.currentPlaylist = false);
 
-        if (addCommand) {
-            const search = addCommand[0];
+            const search = result[0];
+            const playlist = playlists.find(playlist => playlist.name === search);
+
+            if (!!playlist) {
+                playlist.currentPlaylist = true;
+
+                playlist.reset();
+                return playlist.play(message.channel);
+            }
+
+            return message.channel.sendMessage(`Aucune playlist "${search}" trouvée.`);
+        });
+
+        utils.command('/playlist add ([a-zA-Z0-9_]+) (.*)', message.content, result => {
+            const search = result[0];
             let playlist = playlists.find(playlist => playlist.name === search);
             let isNew = false;
 
@@ -74,7 +92,7 @@ module.exports = client => {
                 isNew = true;
             }
 
-            const tracks = addCommand[1].split(',');
+            const tracks = result[1].split(',');
             tracks.forEach(track => {
                 playlist.add(track.trim());
                 message.channel.sendMessage(`Ajout de ${track} à la playlist ${playlist.name}`);
@@ -88,35 +106,9 @@ module.exports = client => {
             } else {
                 repository.update(playlist.serialize());
             }
-        }
+        });
 
-        if (playTrackCommand) {
-            const playlist = playlists.find(playlist => playlist.currentPlaylist);
-
-            if (!!playlist) {
-                return playlist.play(message.channel, parseInt(playTrackCommand[0]) - 1);
-            }
-
-            return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
-        }
-
-        if (playCommand) {
-            playlists.forEach(playlist => playlist.currentPlaylist = false);
-
-            const search = playCommand[0];
-            const playlist = playlists.find(playlist => playlist.name === search);
-
-            if (!!playlist) {
-                playlist.currentPlaylist = true;
-
-                playlist.reset();
-                return playlist.play(message.channel);
-            }
-
-            return message.channel.sendMessage(`Aucune playlist "${search}" trouvée.`);
-        }
-
-        if (nextCommand) {
+        utils.command('/playlist next', message.content, () => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);
 
             if (!!playlist) {
@@ -124,9 +116,9 @@ module.exports = client => {
             }
 
             return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
-        }
+        });
 
-        if (randomizeCommand) {
+        utils.command('/playlist randomize', message.content, () => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);
 
             if (!!playlist) {
@@ -135,6 +127,6 @@ module.exports = client => {
             }
 
             return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
-        }
+        });
     });
 };

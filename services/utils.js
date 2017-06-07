@@ -1,3 +1,5 @@
+const logger = require('./logger');
+
 module.exports = {
 
     matchEvery: (pattern, string) => {
@@ -26,7 +28,7 @@ module.exports = {
         return false;
     },
 
-    command: (command, string) => {
+    command: (command, string, callback = () => {}) => {
         const cmd = string.match(`^${command}`);
 
         if (cmd) {
@@ -36,6 +38,11 @@ module.exports = {
                     result.push(cmd[prop]);
                 }
             }
+
+            logger.debug(`Command ${command} matching with "${result.join()}"`);
+
+            callback(result);
+
             return result;
         }
 

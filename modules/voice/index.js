@@ -10,12 +10,7 @@ module.exports = client => {
             return;
         }
 
-        const joinCommand = utils.command('/joinme', message.content);
-        const leaveCommand = utils.command('/leaveme', message.content);
-        const sayText = utils.command('/saytext (.*)', message.content);
-        const sayTextWithLang = utils.command('/saytext ([a-zA-Z]{2}-[a-zA-Z]{2}) (.*)', message.content);
-
-        if (!!joinCommand) {
+        utils.command('/joinme', message.content, () => {
             client.channels.forEach(channel => {
                 if (
                     channel instanceof Discord.VoiceChannel &&
@@ -26,20 +21,18 @@ module.exports = client => {
                     }).catch(err => message.reply(err));
                 }
             });
-        }
+        });
 
-        if (!!leaveCommand) {
+        utils.command('/leaveme', message.content, () => {
             voiceClient.playText('Au revoir').then(() => setTimeout(() => voiceClient.leave(), 2000)).catch(err => message.reply(err));
-        }
+        });
 
-        if (!!sayTextWithLang) {
-            voiceClient.playText(sayTextWithLang[1], sayTextWithLang[0]).catch(err => message.reply(err));
-            return;
-        }
+        const sayText = utils.command('/saytext (.*)', message.content, result => {
+            voiceClient.playText(result[0]).catch(err => message.reply(err));
+        });
 
-        if (!!sayText) {
-            voiceClient.playText(sayText[0]).catch(err => message.reply(err));
-            return;
-        }
+        const sayTextWithLang = utils.command('/saytext ([a-zA-Z]{2}-[a-zA-Z]{2}) (.*)', message.content, result => {
+            //voiceClient.playText(result[1], result[0]).catch(err => message.reply(err));
+        });
     });
 };
