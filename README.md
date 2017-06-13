@@ -4,12 +4,17 @@ Discord bot for beaujeuteam
 
 ## Installation
 
-Create a config.json like `config.json.dist`. And type your access token like :
+Create a config.json like `config.json.dist`. And type your access tokens like :
 ```json
 {
-    "token": "your-token"
+    "tokens": {
+        "token": "your-discord-token",
+        "tts_token": "tts-token"
+    }
 }
 ```
+
+For `tts_token` keep empty if your doesn't want to use it, or go to [http://www.voicerss.org](http://www.voicerss.org)
 
 And install and start the bot
 
@@ -17,6 +22,46 @@ And install and start the bot
 $ npm install
 $ node index.js
 ```
+
+## Production with Docker
+
+If you want launch discord bot into production server, you can use docker like :
+
+```
+docker run -dt --rm -v $(pwd):/source -w /source letsxo/node-ffmpeg npm start
+```
+
+## Database
+
+Some modules needs a mongoDB database to work fine. Add database configuration into `config.json` like :
+
+```json
+{
+    "db": {
+        "host": "hostname",
+        "dbname": "dbname",
+        "user": "root",
+        "password": "root",
+        "port": "27017"
+    }
+}
+```
+
+Modules `playlist` and `monitoring` uses database.
+
+## Monitoring and Logs
+
+You can enable monitoring (save all user messages into database) and display logs into channel into `config.json` like
+
+```json
+{
+    "debug": true,
+    "channel_debug": "channel_name",
+    "monitoring": true,
+}
+```
+
+For all config, please see [config.json.dist]('./config.json.dist')
 
 ## Contributing
 
@@ -51,35 +96,6 @@ require('./modules/ping')(client);
 
 client.login('token');
 ```
-
-## API
-
-### Utils
-
-Utils is a service with many function to match text and other stuff.
-
-* matchEvery(pattern, string): check if `string` match some `pattern`
-    * Example : ```utils.matchEvery('apple', 'I want to eat an Apple and a Pineapple') //return true```
-
-* matchOne(pattern, string): check if `string` match one `pattern`
-    * Example : ```utils.matchOne('apple', 'I want to eat an apple and a pineapple') //return false```
-
-* matchExactlyEvery(pattern, string): check if `string` match exactly some `pattern`
-    * Example : ```utils.matchExactlyEvery('apple', 'I want to eat an Apple') //return false```
-
-* matchExactlyOne(pattern, string): check if `string` match exactly one `pattern`
-    * Example : ```utils.matchExactlyOne('Apple', 'Apple') //return true```
-
-* matchOneOf(patterns[], string): check if `string` match one of list of `patterns`
-    * Example : ```utils.matchOneOf(['apple', 'pineapple'], 'Apple patatos') //return true```
-
-* matchExactlyOneOf(patterns[], string): check if `string` match exactly one of list of `patterns`
-    * Example : ```utils.matchExactlyOneOf(['apple', 'pineapple'], 'Apple') //return false```
-
-* getRandomlyOneOf(list[]): get one element of `list` ramdomly
-* command(cmd, string): match `string` and return ouput of `command`
-    * Example ```utils.command('/roll ([0-9]+)d([0-9]+)', '1d10') // return [1, 10]```
-* random(max, min = 1): return a random number between `min` and `max`
 
 Another Example
 

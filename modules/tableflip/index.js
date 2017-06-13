@@ -15,9 +15,9 @@ module.exports = client => {
         const hasBotMention = (message.mentions.users.array().filter(user => user.id == client.user.id)).length > 0;
 
         if (hasBotMention && utils.matchOneOf(['tableflip', 'table', 'renverse'], message.content)) {
-            message.channel.sendMessage('(╯°□°）╯︵ ┻━┻');
-            message.channel.sendMessage(utils.getRandomlyOneOf(words));
-            message.channel.sendMessage('┬─┬﻿ ノ( ゜-゜ノ)');
+            message.channel.send('(╯°□°）╯︵ ┻━┻');
+            message.channel.send(utils.getRandomlyOneOf(words));
+            message.channel.send('┬─┬﻿ ノ( ゜-゜ノ)');
         }
     });
 };

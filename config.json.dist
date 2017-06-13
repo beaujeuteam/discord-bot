@@ -1,6 +1,11 @@
 {
-    "token": "MY-TOKEN",
-    "tts_token": "TTS_TOKEN",
+    "debug": false,
+    "channel_debug": "channel_name",
+    "monitoring": false,
+    "tokens": {
+        "token": "MY-TOKEN",
+        "tts_token": "TTS_TOKEN"
+    },
     "db": {
         "host": "",
         "dbname": "",

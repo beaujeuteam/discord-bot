@@ -6,6 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
+    "doc": "node_modules/.bin/jsdoc2md services/*.js > docs/documentations.md",
     "publish": "publish"
   },
   "private": true,
@@ -21,9 +22,10 @@
   },
   "dependencies": {
     "discord.js": "^11.0.0",
+    "mongodb": "^2.2.9",
     "node-opus": "0.2.4",
+    "opusscript": "0.0.3",
     "request": "^2.79.0",
-    "ytdl-core": "^0.9.1",
-    "mongodb": "^2.2.9"
+    "ytdl-core": "^0.9.1"
   }
 }

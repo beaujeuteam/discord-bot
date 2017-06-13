@@ -20,7 +20,7 @@ module.exports = client => {
 
         if (hasBotMention && utils.matchOneOf(['chanson', 'chante'], message.content)) {
             const song = utils.getRandomlyOneOf(songs);
-            song.forEach(sentence => message.channel.sendMessage(sentence));
+            song.forEach(sentence => message.channel.send(sentence));
 
             return;
         }
@@ -29,7 +29,7 @@ module.exports = client => {
             const users = message.mentions.users.array().filter(user => user.id != client.user.id);
             users.forEach(user => {
                 const curse = utils.getRandomlyOneOf(curses);
-                message.channel.sendMessage(`<@${user.id}> ${curse} !`);
+                message.channel.send(`<@${user.id}> ${curse} !`);
             });
 
             return;

@@ -4,8 +4,10 @@ const repository = require('./repositories/messages');
 
 let connectionInit = false;
 
-DB.connect(() => {
-    connectionInit = true;
+DB.connect((error) => {
+    if (!error) {
+        connectionInit = true;
+    }
 });
 
 module.exports = client => {
@@ -29,6 +31,8 @@ module.exports = client => {
                 mentions: {
                     users: message.mentions.users.map(el => ({ id: el.id, username: el.username }))
                 }
+            }).catch(err => {
+                client.logger.debug(`Error with insertion into monitoring : ${err}`);
             });
         }
     });

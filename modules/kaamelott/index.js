@@ -1,8 +1,10 @@
 const utils = require('./../../services/utils');
+const { Command } = require('./../../services/commands');
 const request = require('request');
 
 // @see http://kaamelott.underfloor.io/doc
 const apiUrl = 'http://kaamelott.underfloor.io/quote/rand';
+const kaamelottCmd = new Command('kaamelott', 'Display random kaamelott quote.');
 
 module.exports = client => {
     client.on('message', message => {
@@ -11,16 +13,14 @@ module.exports = client => {
             return;
         }
 
-        if (utils.matchExactlyOne('/kaamelott', message.content)) {
-            client.logger.debug(`Module kaamelott match command "/kaamelott"`);
-
+        kaamelottCmd.match(message.content, () => {
             request(apiUrl, (err, res, body) => {
                 client.logger.request(apiUrl, res);
 
                 if (!err && res.statusCode == 200) {
-                    message.channel.sendMessage(JSON.parse(body).quote || 'C\'est pas faux.');
+                    message.channel.send(JSON.parse(body).quote || 'C\'est pas faux.');
                 }
             });
-        }
+        });
     });
 };

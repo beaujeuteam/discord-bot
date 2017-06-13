@@ -3,26 +3,25 @@ const utils = require('./../../services/utils');
 const Playlist = require('./models/playlist');
 const repository = require('./repositories/playlists');
 const DB = require('./../../services/db');
+const { Command } = require('./../../services/commands');
 
 let playlists = [];
-
-const p = new Playlist('naheulbeuk');
-
-p.add('https://www.youtube.com/watch?v=jC7ghwsvYmE');
-p.add('https://www.youtube.com/watch?v=UWPdBI9FlTg');
-p.add('https://www.youtube.com/watch?v=Y-1WabDTeN0');
-p.add('https://www.youtube.com/watch?v=8XGMUvvN4WY');
-p.add('https://www.youtube.com/watch?v=DFOQJf5BTAI');
-p.add('https://www.youtube.com/watch?v=nloAYB9jr54');
-p.add('https://www.youtube.com/watch?v=UWpLTWZNT4g');
-
-playlists.push(p);
 
 DB.connect(() => {
     repository.find().then(result => playlists = playlists.concat(result.map(p => Playlist.unserialize(p))));
 });
 
-// https://discord.js.org/#/docs/main/stable/class/StreamDispatcher
+const playlistCmd = new Command('playlist', 'List all playlist.');
+const playlistInfoCmd = new Command('playlist [name]', 'List songs of playlist.');
+const playlistPlayCmd = new Command('playlist play [name]', 'Play playlist.');
+const playlistPlaySongCmd = new Command('playlist play [name] <number>', 'Play song of playlist.');
+const playlistCurrentPlaySongCmd = new Command('playlist play <number>', 'Play song from current playlist.');
+const playlistAddCmd = new Command('playlist add [urls] [name]', 'Add song from url(s) to playlist.');
+const playlistNextCmd = new Command('next', 'Play next song from playlist.');
+const playlistRandomizeCmd = new Command('randomize', 'Set randomize mod.');
+const playlistDeleteCmd = new Command('playlist delete [name]', 'Delete playlist.');
+const playlistDeleteSongCmd = new Command('playlist delete [name] <number>', 'Delete song from playlist.');
+
 module.exports = client => {
     client.on('message', message => {
         // Do nothing if is a bot's message
@@ -30,46 +29,54 @@ module.exports = client => {
             return;
         }
 
-        utils.command('/playlist list', message.content, () => {
+        playlistCmd.match(message.content, () => {
             if (0 === playlists.length) {
-                return message.channel.sendMessage(`Aucune playlist.`);
+                return message.channel.send(`Aucune playlist.`);
             }
 
             let result = '';
             playlists.forEach(playlist => result += `- ${playlist.name}\n`);
 
-            return message.channel.sendMessage(`Les playlist :\n${result}`);
+            message.channel.send(`Les playlist :\n${result}`);
         });
 
-        utils.command('/playlist list ([a-zA-Z0-9_]+)', message.content, result => {
-            const search = result[0];
-            const playlist = playlists.find(playlist => playlist.name === search);
+        playlistInfoCmd.match(message.content, ({ name }) => {
+            const playlist = playlists.find(playlist => playlist.name === name);
 
             if (!!playlist) {
                 let result = `${playlist.name} :\n`;
                 playlist.tracks.forEach(track => result += `- ${track}\n`);
 
-                return message.channel.sendMessage(result);
+                return message.channel.send(result);
             }
 
-            return message.channel.sendMessage(`Aucune playlist "${search}" trouvée.`);
+            message.channel.send(`Aucune playlist "${name}" trouvée.`);
         });
 
-        utils.command('/playlist play #([0-9]+)', message.content, result => {
+        playlistPlaySongCmd.match(message.content, ({ name, number }) => {
+            const playlist = playlists.find(playlist => playlist.name === name);
+
+            if (!!playlist) {
+                return playlist.play(message.channel, parseInt(number) - 1);
+            }
+
+            message.channel.send(`Aucune playlist "${name}" trouvée.`);
+        });
+
+        playlistCurrentPlaySongCmd.match(message.content, ({ number }) => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);
 
             if (!!playlist) {
-                return playlist.play(message.channel, parseInt(result[0]) - 1);
+                return playlist.play(message.channel, parseInt(number) - 1);
             }
 
-            return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
+            message.channel.send(`Aucune playlist en cours.`);
         });
 
-        utils.command('/playlist play ([a-zA-Z0-9_]+)', message.content, result => {
+        playlistPlayCmd.match(message.content, ({ name }) => {
             playlists.forEach(playlist => playlist.currentPlaylist = false);
 
-            const search = result[0];
-            const playlist = playlists.find(playlist => playlist.name === search);
+            const playlist = playlists.find(playlist => playlist.name === name);
 
             if (!!playlist) {
                 playlist.currentPlaylist = true;
@@ -78,24 +85,23 @@ module.exports = client => {
                 return playlist.play(message.channel);
             }
 
-            return message.channel.sendMessage(`Aucune playlist "${search}" trouvée.`);
+            message.channel.send(`Aucune playlist "${name}" trouvée.`);
         });
 
-        utils.command('/playlist add ([a-zA-Z0-9_]+) (.*)', message.content, result => {
-            const search = result[0];
-            let playlist = playlists.find(playlist => playlist.name === search);
+        playlistAddCmd.match(message.content, ({ urls, name }) => {
+            let playlist = playlists.find(playlist => playlist.name === name);
             let isNew = false;
 
             if (!playlist) {
-                playlist = new Playlist(search);
+                playlist = new Playlist(name);
                 playlists.push(playlist);
                 isNew = true;
             }
 
-            const tracks = result[1].split(',');
+            const tracks = urls.split(',');
             tracks.forEach(track => {
                 playlist.add(track.trim());
-                message.channel.sendMessage(`Ajout de ${track} à la playlist ${playlist.name}`);
+                message.channel.send(`Ajout de ${track} à la playlist ${playlist.name}`);
             });
 
             if (isNew) {
@@ -108,25 +114,49 @@ module.exports = client => {
             }
         });
 
-        utils.command('/playlist next', message.content, () => {
+        playlistDeleteCmd.match(message.content, ({ name }) => {
+            for (let i = 0; i < playlists.length; i++) {
+                if (playlists[i].name === name) {
+                    repository.remove(playlists[i].serialize());
+                    playlists.splice(i, 1);
+
+                    return message.channel.send(`Playlist "${name}" supprimée.`);
+                }
+            }
+        });
+
+        playlistDeleteSongCmd.match(message.content, ({ name, number }) => {
+            const playlist = playlists.find(playlist => playlist.name === name);
+
+            if (!!playlist) {
+                playlist.tracks.splice((number - 1), 1);
+                repository.update(playlist.serialize());
+
+                return message.channel.send(`Musique supprimée.`);
+            }
+
+            message.channel.send(`Aucune playlist "${name}" trouvée.`);
+        });
+
+        playlistNextCmd.match(message.content, () => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);
 
             if (!!playlist) {
                 return playlist.next();
             }
 
-            return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
+            message.channel.send(`Aucune playlist en cours de lecture.`);
         });
 
-        utils.command('/playlist randomize', message.content, () => {
+        playlistRandomizeCmd.match(message.content, () => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);
 
             if (!!playlist) {
                 playlist.randomize();
-                return message.channel.sendMessage(`Lecture aléatoire : ${playlist.random ? 'activée' : 'désactivée' }`);
+                return message.channel.send(`Lecture aléatoire : ${playlist.random ? 'activée' : 'désactivée' }`);
             }
 
-            return message.channel.sendMessage(`Aucune playlist en cours de lecture.`);
+            message.channel.send(`Aucune playlist en cours de lecture.`);
         });
     });
 };

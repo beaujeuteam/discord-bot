@@ -29,9 +29,20 @@ class PlaylistsRepository {
         });
     }
 
-    update (data, options = {}) {
+    update(data, options = {}) {
         return new Promise((resolve, reject) => {
             DB.db.collection(this.collection).update({ _id: new MongoObjectID(data._id) }, data, options, (error, results) => {
+                if (!!error) {
+                    return reject(error);
+                }
+                return resolve(results);
+            });
+        });
+    }
+
+    remove(data, options = {}) {
+        return new Promise((resolve, reject) => {
+            DB.db.collection(this.collection).remove({ _id: new MongoObjectID(data._id) }, options, (error, results) => {
                 if (!!error) {
                     return reject(error);
                 }

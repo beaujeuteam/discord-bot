@@ -1,6 +1,16 @@
 const Discord = require('discord.js');
 const utils = require('./../../services/utils');
 const voiceClient = require('./../../services/voice-client');
+const { Command } = require('./../../services/commands');
+
+const joinCmd = new Command('join', 'Tell at bot to join vocal channel.');
+const leaveCmd = new Command('leave', 'Tell at bot to leave current vocal channel.');
+const sayCmd = new Command('say [text]', 'Tell at bot to say something.')
+    .option('-f', 'fr', 'Use French language')
+    .option('-d', 'de', 'Use German language')
+    .option('-r', 'ru', 'Use Russion language')
+    .option('-e', 'es', 'Use Spanish language')
+    .option('-u', 'us', 'Use English language');
 
 // http://www.voicerss.org/api/documentation.aspx
 module.exports = client => {
@@ -10,7 +20,7 @@ module.exports = client => {
             return;
         }
 
-        utils.command('/joinme', message.content, () => {
+        joinCmd.match(message.content, () => {
             client.channels.forEach(channel => {
                 if (
                     channel instanceof Discord.VoiceChannel &&
@@ -23,16 +33,22 @@ module.exports = client => {
             });
         });
 
-        utils.command('/leaveme', message.content, () => {
-            voiceClient.playText('Au revoir').then(() => setTimeout(() => voiceClient.leave(), 2000)).catch(err => message.reply(err));
+        leaveCmd.match(message.content, () => {
+            voiceClient.playText('Au revoir')
+                .then(() => setTimeout(() => voiceClient.leave(), 2000))
+                .catch(err => message.reply(err));
         });
 
-        const sayText = utils.command('/saytext (.*)', message.content, result => {
-            voiceClient.playText(result[0]).catch(err => message.reply(err));
-        });
+        sayCmd.match(message.content, ({ text }, { fr, de, ru, es, us }) => {
 
-        const sayTextWithLang = utils.command('/saytext ([a-zA-Z]{2}-[a-zA-Z]{2}) (.*)', message.content, result => {
-            //voiceClient.playText(result[1], result[0]).catch(err => message.reply(err));
+            let lang = fr ? 'fr' : 'fr';
+            lang = de ? 'de' : lang;
+            lang = ru ? 'ru' : lang;
+            lang = es ? 'es' : lang;
+            lang = us ? 'us' : lang;
+
+            voiceClient.playText(text, lang)
+                .catch(err => message.send('An error occurred ' + err));
         });
     });
 };

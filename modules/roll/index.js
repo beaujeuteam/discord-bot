@@ -1,4 +1,7 @@
 const utils = require('./../../services/utils');
+const { Command } = require('./../../services/commands');
+
+const rollCmd = new Command('roll <number>d<faces>', 'Roll dices.');
 
 module.exports = client => {
     client.on('message', message => {
@@ -7,10 +10,10 @@ module.exports = client => {
             return;
         }
 
-        utils.command('/roll ([0-9]+)d([0-9]+)', message.content, result => {
-            result[0] = result[0] > 10 ? 10 : result[0];
-            for (let i = 0; i < result[0]; i++) {
-                message.reply(utils.random(result[1]));
+        rollCmd.match(message.content, ({ number, faces }) => {
+            number = number > 10 ? 10 : number;
+            for (let i = 0; i < number; i++) {
+                message.reply(utils.random(faces));
             }
         });
     });

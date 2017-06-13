@@ -25,12 +25,13 @@ class Playlist {
             this.currentTrack = playTrack;
         }
 
-        const track = this.tracks[this.currentTrack];
-        const strema = voiceClient.playUrl(track);
-
         if (null !== channel) {
             this.channel = channel;
         }
+
+        const track = this.tracks[this.currentTrack];
+        const strema = voiceClient.playUrl(track)
+            .catch(err => this.channel.send('An error occurred ' + error));
 
         voiceClient.player.once('end', reason => {
             if (reason === 'Stream is not generating quickly enough.') {
@@ -39,7 +40,7 @@ class Playlist {
         });
 
         if (!!this.channel) {
-            this.channel.sendMessage(`Lecture de ${track} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
+            this.channel.send(`Lecture de ${track} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
         }
     }
 

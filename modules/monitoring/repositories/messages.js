@@ -13,6 +13,7 @@ class MessagesRepository {
                 if (!!error) {
                     return reject(error);
                 }
+                
                 return resolve(results.ops[0]);
             });
         });
