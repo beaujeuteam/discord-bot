@@ -57,7 +57,7 @@ class VoiceClient {
         if (!!this.connection) {
             logger.debug(`Leave channel ${this.channel.name}`);
 
-            this.player.end();
+            this.player.end('Stop by leaving');
             this.player = null;
 
             this.connection.disconnect();
@@ -71,47 +71,61 @@ class VoiceClient {
     /**
      * Make bot play music file
      * @param {string} file
+     * @param {Callable} [callback]
      * @param {Object} [options={}]
      *
      * @alias module:VoiceClient
      */
-    playFile(file, options = {}) {
-        if (!!this.connection) {
-
-            if (!!this.player) {
-                this.player.end();
-                this.player.stream = null;
-                this.player = null;
+    playFile(file, callback = () => {}, options = {}) {
+        return new Promise((resolve, reject) => {
+            if (!this.connection) {
+                return reject(new Error('No connection.'));
             }
 
             options.volume = this.volume;
-            this.player = this.connection.playFile(file, options);
+            this.connection.playFile(file, options);
+            this.player = this.connection.dispatcher;
 
-            this.player.on('start', () => logger.debug(`Play file ${file}`));
-        }
+            this.player.on('start', () => {
+                logger.debug(`Play file ${file}`);
+                resolve();
+            });
+
+            this.player.on('error', error => {
+                logger.debug(`Player error ${error}`);
+                reject(error);
+            });
+        });
     }
 
     /**
      * Make bot play stream
      * @param {Stream} stream
      * @param {Object} [options={}]
+     * @return {Promise}
      *
      * @alias module:VoiceClient
      */
     playStream(stream, options = {}) {
-        if (!!this.connection) {
-
-            if (!!this.player) {
-                this.player.end();
-                this.player.stream = null;
-                this.player = null;
+        return new Promise((resolve, reject) => {
+            if (!this.connection) {
+                return reject(new Error('No connection.'));
             }
 
             options.volume = this.volume;
-            this.player = this.connection.playStream(stream, options);
+            this.connection.playStream(stream, options);
+            this.player = this.connection.dispatcher;
 
-            this.player.on('start', () => logger.debug(`Play stream`));
-        }
+            this.player.on('start', () => {
+                logger.debug(`Play stream`);
+                resolve();
+            });
+
+            this.player.on('error', error => {
+                logger.debug(`Player error ${error}`);
+                reject(error);
+            });
+        });
     }
 
     /**
@@ -177,30 +191,26 @@ class VoiceClient {
 
         logger.debug(`Play URL ${url}`);
 
-        return new Promise((resolve, reject) => {
-            if (url.match(/youtube.com\/watch\?v=(.*)/i)) {
-                logger.debug(`Youtube link matching`);
-                stream = ytdl(url, { quality: 'lowest', filter: 'audioonly' });
-            } else {
-                stream = request(url);
-            }
+        if (url.match(/youtube.com\/watch\?v=(.*)/i)) {
+            logger.debug(`Youtube link matching`);
+            stream = ytdl(url, { quality: 'lowest', filter: 'audioonly' });
+        } else {
+            stream = request(url);
+        }
 
-            stream.on('start', () => resolve(stream));
-            stream.on('error', () => reject(error));
-
-            this.playStream(stream);
-        });
+        return this.playStream(stream);
     }
 
     /**
      * Stop music
+     * @param {string} [reason=null]
      *
      * @alias module:VoiceClient
      */
-    stop() {
+    stop(reason = null) {
         if (null !== this.player) {
             logger.debug(`Player stop`);
-            this.player.end('Stop by user');
+            this.player.end(reason);
         }
     }
 

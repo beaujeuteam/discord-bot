@@ -30,21 +30,23 @@ class Playlist {
         }
 
         const track = this.tracks[this.currentTrack];
-        const strema = voiceClient.playUrl(track)
+
+        voiceClient.playUrl(track)
+            .then(() => {
+                voiceClient.player.once('end', reason => {
+                    if (reason === 'Stream is not generating quickly enough.' || reason === 'skip song') {
+                        setTimeout(() => this.next(), 1000);
+                    }
+                });
+
+                if (!!this.channel) {
+                    this.channel.send(`Lecture de ${track} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
+                }
+            })
             .catch(err => this.channel.send('An error occurred ' + error));
-
-        voiceClient.player.once('end', reason => {
-            if (reason === 'Stream is not generating quickly enough.') {
-                this.next();
-            }
-        });
-
-        if (!!this.channel) {
-            this.channel.send(`Lecture de ${track} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
-        }
     }
 
-    next () {
+    next ()
         this.currentTrack++;
 
         if (this.currentTrack > this.tracks.length - 1) {
@@ -64,6 +66,10 @@ class Playlist {
 
     randomize() {
         this.random = !this.random;
+    }
+
+    stop(reason) {
+        this.voiceClient.stop(reason);
     }
 
     get track() {

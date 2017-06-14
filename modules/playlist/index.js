@@ -57,6 +57,9 @@ module.exports = client => {
             const playlist = playlists.find(playlist => playlist.name === name);
 
             if (!!playlist) {
+                playlists.forEach(playlist => playlist.currentPlaylist = false);
+                playlist.currentPlaylist = true;
+
                 return playlist.play(message.channel, parseInt(number) - 1);
             }
 
@@ -80,8 +83,8 @@ module.exports = client => {
 
             if (!!playlist) {
                 playlist.currentPlaylist = true;
-
                 playlist.reset();
+
                 return playlist.play(message.channel);
             }
 
@@ -142,7 +145,7 @@ module.exports = client => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);
 
             if (!!playlist) {
-                return playlist.next();
+                return playlist.stop('skip song');
             }
 
             message.channel.send(`Aucune playlist en cours de lecture.`);

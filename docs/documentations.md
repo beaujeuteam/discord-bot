@@ -350,11 +350,11 @@ Voice client service for discord
 * [VoiceClient](#module_VoiceClient)
     * [VoiceClient#join(channel)](#exp_module_VoiceClient--VoiceClient+join) ⇒ <code>Promise</code> ⏏
     * [VoiceClient#leave()](#exp_module_VoiceClient--VoiceClient+leave) ⏏
-    * [VoiceClient#playFile(file, [options])](#exp_module_VoiceClient--VoiceClient+playFile) ⏏
-    * [VoiceClient#playStream(stream, [options])](#exp_module_VoiceClient--VoiceClient+playStream) ⏏
+    * [VoiceClient#playFile(file, [callback], [options])](#exp_module_VoiceClient--VoiceClient+playFile) ⏏
+    * [VoiceClient#playStream(stream, [options])](#exp_module_VoiceClient--VoiceClient+playStream) ⇒ <code>Promise</code> ⏏
     * [VoiceClient#playText(text, [lang])](#exp_module_VoiceClient--VoiceClient+playText) ⏏
     * [VoiceClient#playUrl(url, [options])](#exp_module_VoiceClient--VoiceClient+playUrl) ⇒ <code>Promise</code> ⏏
-    * [VoiceClient#stop()](#exp_module_VoiceClient--VoiceClient+stop) ⏏
+    * [VoiceClient#stop([reason])](#exp_module_VoiceClient--VoiceClient+stop) ⏏
     * [VoiceClient#pause()](#exp_module_VoiceClient--VoiceClient+pause) ⏏
     * [VoiceClient#setVolume(volume)](#exp_module_VoiceClient--VoiceClient+setVolume) ⏏
 
@@ -377,7 +377,7 @@ Make bot leave current channel
 **Kind**: Exported function  
 <a name="exp_module_VoiceClient--VoiceClient+playFile"></a>
 
-### VoiceClient#playFile(file, [options]) ⏏
+### VoiceClient#playFile(file, [callback], [options]) ⏏
 Make bot play music file
 
 **Kind**: Exported function  
@@ -385,11 +385,12 @@ Make bot play music file
 | Param | Type | Default |
 | --- | --- | --- |
 | file | <code>string</code> |  | 
+| [callback] | <code>Callable</code> |  | 
 | [options] | <code>Object</code> | <code>{}</code> | 
 
 <a name="exp_module_VoiceClient--VoiceClient+playStream"></a>
 
-### VoiceClient#playStream(stream, [options]) ⏏
+### VoiceClient#playStream(stream, [options]) ⇒ <code>Promise</code> ⏏
 Make bot play stream
 
 **Kind**: Exported function  
@@ -425,10 +426,15 @@ Make bot play music from url
 
 <a name="exp_module_VoiceClient--VoiceClient+stop"></a>
 
-### VoiceClient#stop() ⏏
+### VoiceClient#stop([reason]) ⏏
 Stop music
 
 **Kind**: Exported function  
+
+| Param | Type | Default |
+| --- | --- | --- |
+| [reason] | <code>string</code> | <code>null</code> | 
+
 <a name="exp_module_VoiceClient--VoiceClient+pause"></a>
 
 ### VoiceClient#pause() ⏏
