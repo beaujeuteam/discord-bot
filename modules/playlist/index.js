@@ -7,8 +7,10 @@ const { Command } = require('./../../services/commands');
 
 let playlists = [];
 
-DB.connect(() => {
-    repository.find().then(result => playlists = playlists.concat(result.map(p => Playlist.unserialize(p))));
+DB.connect(error => {
+    if (!error) {
+        repository.find().then(result => playlists = playlists.concat(result.map(p => Playlist.unserialize(p))));
+    }
 });
 
 const playlistCmd = new Command('playlist', 'List all playlist.');

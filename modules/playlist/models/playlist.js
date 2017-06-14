@@ -46,7 +46,7 @@ class Playlist {
             .catch(err => this.channel.send('An error occurred ' + error));
     }
 
-    next ()
+    next () {
         this.currentTrack++;
 
         if (this.currentTrack > this.tracks.length - 1) {
