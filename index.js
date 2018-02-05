@@ -58,6 +58,7 @@ require('./modules/voice')(client);
 require('./modules/player')(client);
 require('./modules/playlist')(client);
 require('./modules/crypto')(client);
+require('./modules/wolfuns')(client);
 //require('./modules/adventure')(client);
 
 if (!!config.monitoring) {
