@@ -23,6 +23,7 @@ client.on('ready', () => {
     }
 
     client.logger = logger;
+    client.config = config;
 });
 
 client.on('disconnect', event => {
@@ -41,6 +42,11 @@ client.on('message', message => {
     client.logger.info(`New message from ${message.author.username} : ${message.content}`);
 });
 
+client.on('error', err => {
+    console.error(err);
+    client.login(config.tokens.token);
+});
+
 require('./modules/ping')(client);
 require('./modules/love')(client);
 require('./modules/good-morning')(client);
@@ -51,6 +57,7 @@ require('./modules/tableflip')(client);
 require('./modules/voice')(client);
 require('./modules/player')(client);
 require('./modules/playlist')(client);
+require('./modules/crypto')(client);
 //require('./modules/adventure')(client);
 
 if (!!config.monitoring) {
