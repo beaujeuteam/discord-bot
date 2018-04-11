@@ -194,6 +194,8 @@ class VoiceClient {
         if (url.match(/youtube.com\/watch\?v=(.*)/i)) {
             logger.debug(`Youtube link matching`);
             stream = ytdl(url, { quality: 'lowest', filter: 'audioonly' });
+
+            stream.on('error', err => logger.error(`Error with youtube stream : ${err.message}`));
         } else {
             stream = request(url);
         }

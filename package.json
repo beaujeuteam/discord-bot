@@ -17,7 +17,7 @@
       "ip": "92.222.88.16",
       "user": "root"
     },
-    "image": "letsxo/node-ffmpeg",
+    "image": "steebchen/node-ffmpeg",
     "port": "9000"
   },
   "dependencies": {
@@ -26,6 +26,6 @@
     "node-opus": "0.2.4",
     "opusscript": "0.0.3",
     "request": "^2.79.0",
-    "ytdl-core": "^0.9.1"
+    "ytdl-core": "^0.20.0"
   }
 }

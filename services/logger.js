@@ -75,6 +75,18 @@ class Logger {
     }
 
     /**
+     * Send log as error message
+     * @param {string} message
+     *
+     * @alias module:Logger
+     */
+    error(message) {
+        if (this.isInit()) {
+            this.channel.send(`${this.getDate()} [ERROR] ${message}`);
+        }
+    }
+
+    /**
      * Send log of HTTP request
      * @param {string} url
      * @param {Response} res
