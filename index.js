@@ -8,7 +8,7 @@ const { Command, commands } = require('./services/commands');
 
 const client = new Discord.Client();
 const logChannel = null;
-const helpCommand = new Command('help', 'Display list of commands', 'helper')
+const helpCommand = new Command('help', 'Display list of commands (use -v option for more information)', 'helper')
                         .option('-v', 'verbose', 'Display all options');
 
 // extend limit of listener
@@ -59,6 +59,7 @@ require('./modules/player')(client);
 require('./modules/playlist')(client);
 require('./modules/crypto')(client);
 require('./modules/wolfuns')(client);
+require('./modules/meteo')(client);
 //require('./modules/adventure')(client);
 
 if (!!config.monitoring) {

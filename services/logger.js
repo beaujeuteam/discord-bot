@@ -60,6 +60,8 @@ class Logger {
         if (this.isInit()) {
             this.channel.send(`${this.getDate()} [INFO] ${message}`);
         }
+
+        console.log(`${this.getDate()} [INFO] ${message}`);
     }
 
     /**
@@ -72,6 +74,8 @@ class Logger {
         if (this.isInit()) {
             this.channel.send(`${this.getDate()} [DEBUG] ${message}`);
         }
+
+        console.log(`${this.getDate()} [DEBUG] ${message}`);
     }
 
     /**
@@ -84,6 +88,8 @@ class Logger {
         if (this.isInit()) {
             this.channel.send(`${this.getDate()} [ERROR] ${message}`);
         }
+
+        console.error(`${this.getDate()} [ERROR] ${message}`);
     }
 
     /**
@@ -97,6 +103,8 @@ class Logger {
         if (this.isInit()) {
             this.channel.send(`${this.getDate()} [DEBUG] Request at ${url}, response <${res.statusCode}> : ${res.body}`);
         }
+
+        console.log(`${this.getDate()} [DEBUG] Request at ${url}, response <${res.statusCode}> : ${res.body}`);
     }
 }
 

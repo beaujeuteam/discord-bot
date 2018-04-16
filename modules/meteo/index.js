@@ -1,9 +1,18 @@
 const request = require('request');
 const utils = require('./../../services/utils');
+const config = require('./../../config.json');
+const { Command } = require('./../../services/commands');
 
 // @see http://openweathermap.org/api
-const key = '9aa0cb51bf2f55ad13b3f32faaee0a9f';
-const apiUrl = `http://api.openweathermap.org/data/2.5/weather?q=lyon,fr&appid=${key}&lang=fr&units=metric`;
+const key = config.tokens.meteo_token;
+const apiUrl = `http://api.openweathermap.org/data/2.5/weather?appid=${key}&lang=fr&units=metric`;
+const apiUrl5d = `http://api.openweathermap.org/data/2.5/forecast?appid=${key}&lang=fr&units=metric`;
+
+const meteoCmd = new Command('meteo', `Display current meteo in ${config.meteo_default_city}.`, 'meteo');
+const meteoCityCmd = new Command('meteo [city]', 'Display current meteo in city.', 'meteo');
+
+const meteo5dCmd = new Command('meteo-5d', `Display 5 days meteo in ${config.meteo_default_city}.`, 'meteo');
+const meteoCity5dCmd = new Command('meteo-5d [city]', 'Display 5 days meteo in city.', 'meteo');
 
 module.exports = client => {
 
@@ -42,24 +51,96 @@ module.exports = client => {
         }
     };
 
+    const formatDate = (date) => {
+        return date.replace(/[0-9]{4}-([0-9]{2})-([0-9]{2}) (15:00:00|03:00:00)/, '$2/$1');
+    };
+
     client.on('message', message => {
         // Do nothing if is a bot's message
         if (message.author.id === client.user.id) {
             return;
         }
 
-        if (utils.matchExactlyOne('/meteo', message.content)) {
+        meteoCmd.match(message.content, () => {
             client.logger.debug(`Module meteo match command "/meteo"`);
 
-            request(apiUrl, (err, res, body) => {
-                client.logger.request(apiUrl, res);
+            const url = `${apiUrl}&q=${config.meteo_default_city},fr`;
+
+            request(url, (err, res, body) => {
+                client.logger.request(url, res);
 
                 if (!err && res.statusCode == 200) {
                     const data = JSON.parse(body);
                     const weather = data.weather[0];
-                    message.channel.sendMessage(`Il fait ${weather.description.toLowerCase()} ${getImoji(weather.icon)} avec ${Math.floor(data.main.temp)}°C`);
+                    message.channel.send(`**${config.meteo_default_city}** ${weather.description.toLowerCase()} ${getImoji(weather.icon)} avec ${Math.floor(data.main.temp)}°C`);
                 }
             });
-        }
+        });
+
+        meteoCityCmd.match(message.content, ({ city }) => {
+            client.logger.debug(`Module meteo match command "/meteo ${city}"`);
+
+            const url = `${apiUrl}&q=${city},fr`;
+
+            request(url, (err, res, body) => {
+                client.logger.request(url, res);
+
+                if (!err && res.statusCode == 200) {
+                    const data = JSON.parse(body);
+                    const weather = data.weather[0];
+                    message.channel.send(`**${city}** ${weather.description.toLowerCase()} ${getImoji(weather.icon)} avec ${Math.floor(data.main.temp)}°C`);
+                }
+            });
+        });
+
+        meteo5dCmd.match(message.content, () => {
+            client.logger.debug(`Module meteo match command "/meteo-5d"`);
+
+            const url = `${apiUrl5d}&q=${config.meteo_default_city},fr`;
+
+            request(url, (err, res, body) => {
+                client.logger.request(url, res);
+
+                if (!err && res.statusCode == 200) {
+                    const data = JSON.parse(body);
+                    const list = data.list;
+
+                    let result = `**${config.meteo_default_city}**\n\n`;
+                    list.forEach(day => {
+                        if (day.dt_txt.match(/[0-9]{4}-[0-9]{2}-[0-9]{2} (15:00:00)/)) {
+                            const weather = day.weather[0];
+                            result += `${formatDate(day.dt_txt)}  ${weather.description.toLowerCase()} ${getImoji(weather.icon)} avec ${Math.floor(day.main.temp)}°C\n`;
+                        }
+                    });
+
+                    message.channel.send(result);
+                }
+            });
+        });
+
+        meteoCity5dCmd.match(message.content, ({ city }) => {
+            client.logger.debug(`Module meteo match command "/meteo-5d ${city}"`);
+
+            const url = `${apiUrl5d}&q=${city},fr`;
+
+            request(url, (err, res, body) => {
+                client.logger.request(url, res);
+
+                if (!err && res.statusCode == 200) {
+                    const data = JSON.parse(body);
+                    const list = data.list;
+
+                    let result = `**${city}**\n\n`;
+                    list.forEach(day => {
+                        if (day.dt_txt.match(/[0-9]{4}-[0-9]{2}-[0-9]{2} (15:00:00)/)) {
+                            const weather = day.weather[0];
+                            result += `${formatDate(day.dt_txt)}  ${weather.description.toLowerCase()} ${getImoji(weather.icon)} avec ${Math.floor(day.main.temp)}°C\n`;
+                        }
+                    });
+
+                    message.channel.send(result);
+                }
+            });
+        });
     });
 };

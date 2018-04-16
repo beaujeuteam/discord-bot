@@ -4,9 +4,11 @@
     "channel_crypto": "channel_name",
     "channel_wolfuns": "channel_name",
     "monitoring": false,
+    "meteo_default_city": "Paris",
     "tokens": {
         "token": "MY-TOKEN",
-        "tts_token": "TTS_TOKEN"
+        "tts_token": "TTS_TOKEN",
+        "meteo_token": "METEO_TOKEN"
     },
     "db": {
         "host": "",
