@@ -3,9 +3,9 @@ const utils = require('./../../services/utils');
 const voiceClient = require('./../../services/voice-client');
 const { Command } = require('./../../services/commands');
 
-const joinCmd = new Command('join', 'Tell at bot to join vocal channel.');
-const leaveCmd = new Command('leave', 'Tell at bot to leave current vocal channel.');
-const sayCmd = new Command('say [text]', 'Tell at bot to say something.')
+const joinCmd = new Command('join', 'Tell at bot to join vocal channel.', 'voice');
+const leaveCmd = new Command('leave', 'Tell at bot to leave current vocal channel.', 'voice');
+const sayCmd = new Command('say [text]', 'Tell at bot to say something.', 'voice')
     .option('-f', 'fr', 'Use French language')
     .option('-d', 'de', 'Use German language')
     .option('-r', 'ru', 'Use Russion language')

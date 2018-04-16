@@ -15,13 +15,13 @@ DB.connect(error => {
     }
 });
 
-const playCmd = new Command('play [source]', 'Tell at bot to play music from url or from tag.');
-const addCmd = new Command('add [source] [tag]', 'Add music source with tag.');
-const tagsCmd = new Command('tags', 'List all tags.');
-const removeCmd = new Command('remove [tag]', 'Remove tag.');
-const stopCmd = new Command('stop', 'Tell at bot to stop music.');
-const pauseCmd = new Command('pause', 'Tell at bot to pause music.');
-const volumeCmd = new Command('volume <volume>', 'Tell at bot to set volume at 0-200% (between 0 and 2).');
+const playCmd = new Command('play [source]', 'Tell at bot to play music from url or from tag.', 'music');
+const addCmd = new Command('add [source] [tag]', 'Add music source with tag.', 'music');
+const tagsCmd = new Command('tags', 'List all tags.', 'music');
+const removeCmd = new Command('remove [tag]', 'Remove tag.', 'music');
+const stopCmd = new Command('stop', 'Tell at bot to stop music.', 'music');
+const pauseCmd = new Command('pause', 'Tell at bot to pause music.', 'music');
+const volumeCmd = new Command('volume <volume>', 'Tell at bot to set volume at 0-200% (between 0 and 2).', 'music');
 
 // https://discord.js.org/#/docs/main/stable/class/StreamDispatcher
 module.exports = client => {

@@ -4,7 +4,7 @@ const request = require('request');
 
 // @see http://kaamelott.underfloor.io/doc
 const apiUrl = 'http://kaamelott.underfloor.io/quote/rand';
-const kaamelottCmd = new Command('kaamelott', 'Display random kaamelott quote.');
+const kaamelottCmd = new Command('kaamelott', 'Display random kaamelott quote.', 'fun');
 
 module.exports = client => {
     client.on('message', message => {

@@ -13,16 +13,16 @@ DB.connect(error => {
     }
 });
 
-const playlistCmd = new Command('playlist', 'List all playlist.');
-const playlistInfoCmd = new Command('playlist [name]', 'List songs of playlist.');
-const playlistPlayCmd = new Command('playlist play [name]', 'Play playlist.');
-const playlistPlaySongCmd = new Command('playlist play [name] <number>', 'Play song of playlist.');
-const playlistCurrentPlaySongCmd = new Command('playlist play <number>', 'Play song from current playlist.');
-const playlistAddCmd = new Command('playlist add [urls] [name]', 'Add song from url(s) to playlist.');
-const playlistNextCmd = new Command('next', 'Play next song from playlist.');
-const playlistRandomizeCmd = new Command('randomize', 'Set randomize mod.');
-const playlistDeleteCmd = new Command('playlist delete [name]', 'Delete playlist.');
-const playlistDeleteSongCmd = new Command('playlist delete [name] <number>', 'Delete song from playlist.');
+const playlistCmd = new Command('playlist', 'List all playlist.', 'playlist');
+const playlistInfoCmd = new Command('playlist [name]', 'List songs of playlist.', 'playlist');
+const playlistPlayCmd = new Command('playlist play [name]', 'Play playlist.', 'playlist');
+const playlistPlaySongCmd = new Command('playlist play [name] <number>', 'Play song of playlist.', 'playlist');
+const playlistCurrentPlaySongCmd = new Command('playlist play <number>', 'Play song from current playlist.', 'playlist');
+const playlistAddCmd = new Command('playlist add [urls] [name]', 'Add song from url(s) to playlist.', 'playlist');
+const playlistNextCmd = new Command('next', 'Play next song from playlist.', 'playlist');
+const playlistRandomizeCmd = new Command('randomize', 'Set randomize mod.', 'playlist');
+const playlistDeleteCmd = new Command('playlist delete [name]', 'Delete playlist.', 'playlist');
+const playlistDeleteSongCmd = new Command('playlist delete [name] <number>', 'Delete song from playlist.', 'playlist');
 
 module.exports = client => {
     client.on('message', message => {
