@@ -106,7 +106,7 @@ module.exports = client => {
             const tracks = urls.split(',');
             tracks.forEach(track => {
                 playlist.add(track.trim());
-                message.channel.send(`Ajout de ${track} à la playlist ${playlist.name}`);
+                message.channel.send(`Ajout de ${Playlist.cleanTrack(track)} à la playlist ${playlist.name}`);
             });
 
             if (isNew) {

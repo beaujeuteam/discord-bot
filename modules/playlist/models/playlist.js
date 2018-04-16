@@ -40,7 +40,7 @@ class Playlist {
                 });
 
                 if (!!this.channel) {
-                    this.channel.send(`Lecture de ${track} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
+                    this.channel.send(`Lecture de ${this.cleanTrack(track)} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
                 }
             })
             .catch(err => this.channel.send('An error occurred ' + error));
@@ -69,7 +69,7 @@ class Playlist {
     }
 
     stop(reason) {
-        this.voiceClient.stop(reason);
+        voiceClient.stop(reason);
     }
 
     get track() {
@@ -94,6 +94,10 @@ class Playlist {
         playlist.tracks = data.tracks.split(',');
 
         return playlist;
+    }
+
+    static cleanTrack(track) {
+        return track.replace(/(http:\/\/|https:\/\/)/, '');
     }
 }
 
