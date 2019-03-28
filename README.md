@@ -28,7 +28,7 @@ $ node index.js
 If you want launch discord bot into production server, you can use docker like :
 
 ```
-docker run -dt --rm -v $(pwd):/source -w /source letsxo/node-ffmpeg npm start
+docker run -dt --rm -v $(pwd):/source -w /source steebchen/node-ffmpeg npm start
 ```
 
 ## Database

@@ -2,10 +2,11 @@ const voiceClient = require('./../../../services/voice-client');
 
 class Playlist {
 
-    constructor(name) {
+    constructor(name, tracks, user) {
         this.id = null;
         this.name = name;
-        this.tracks = [];
+        this.tracks = tracks;
+        this.user = user;
         this.currentTrack = 0;
         this.currentPlaylist = false;
         this.channel = null;
@@ -31,7 +32,7 @@ class Playlist {
 
         const track = this.tracks[this.currentTrack];
 
-        voiceClient.playUrl(track)
+        voiceClient.playUrl(`https://www.youtube.com/watch?v=${track.id}`)
             .then(() => {
                 voiceClient.player.once('end', reason => {
                     if (reason === 'Stream is not generating quickly enough.' || reason === 'skip song') {
@@ -40,13 +41,13 @@ class Playlist {
                 });
 
                 if (!!this.channel) {
-                    this.channel.send(`Lecture de ${track} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
+                    this.channel.send(`Lecture de ${track.title} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
                 }
             })
             .catch(err => this.channel.send('An error occurred ' + error));
     }
 
-    next () {
+    next() {
         this.currentTrack++;
 
         if (this.currentTrack > this.tracks.length - 1) {
@@ -69,7 +70,7 @@ class Playlist {
     }
 
     stop(reason) {
-        this.voiceClient.stop(reason);
+        voiceClient.stop(reason);
     }
 
     get track() {
@@ -84,14 +85,13 @@ class Playlist {
         return {
             _id: this.id,
             name: this.name,
-            tracks: this.tracks.join()
+            tracks: this.tracks
         }
     }
 
     static unserialize(data) {
-        let playlist = new Playlist(data.name);
+        let playlist = new Playlist(data.name, data.tracks, data.user);
         playlist.id = data._id;
-        playlist.tracks = data.tracks.split(',');
 
         return playlist;
     }

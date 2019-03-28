@@ -135,5 +135,19 @@ module.exports = {
      */
     random: (max, min = 1) => {
         return Math.floor((Math.random() * max) + min);
+    },
+
+    /**
+     * Format string to URL
+     * @param {string} string
+     * @return {string}
+     *
+     * @example
+     * utils.stringToUrl('article title'); // article-title
+     *
+     * @alias module:Utils
+     */
+    stringToURL: (string) => {
+        return String(string).replace(/\s/g, '-').toLowerCase();
     }
 };

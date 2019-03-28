@@ -1,10 +1,12 @@
 const utils = require('./../../services/utils');
 const request = require('request');
+const { Command } = require('./../../services/commands');
 
 let dungeons = [];
 let characters = [];
-const apiUrl = 'http://37.187.105.94:9005';
-//const apiUrl = 'http://localhost:8080';
+let monsters = [];
+//const apiUrl = 'http://37.187.105.94:9005';
+const apiUrl = 'http://localhost:8080';
 
 const refreshDungeons = (callback = () => {}) => {
     request(`${apiUrl}/dungeons`, (err, res, body) => {
@@ -24,9 +26,19 @@ const refreshCharacters = (callback = () => {}) => {
     });
 };
 
+const refreshMonsters = (callback = () => {}) => {
+    request(`${apiUrl}/monsters`, (err, res, body) => {
+        if (!err && res.statusCode == 200) {
+            monsters = JSON.parse(body).data;
+            callback();
+        }
+    });
+};
+
 const refresh = () => {
     refreshDungeons();
     refreshCharacters();
+    refreshMonsters();
 };
 
 const sendCharacterStatus = (dungeon, character, message) => {
@@ -38,11 +50,35 @@ const sendCharacterStatus = (dungeon, character, message) => {
             const southDoor = room.doors.find(el => el.direction === 'south');
             const westDoor = room.doors.find(el => el.direction === 'west');
 
-            let text = `L'aventurier ${character.name} est dans la salle [${room.posX}, ${room.posY}] du donjon ${dungeon.name}${northDoor ? '\nIl y a une porte au nord.' : ''}${eastDoor ? '\nIl y a une porte à l\'est.' : ''}${southDoor ? '\nIl y a une porte au sud.' : ''}${westDoor ? '\nIl y a une porte à l\'ouest.' : ''}\nQue fait-il ?`;
-            message.channel.sendMessage(text);
+            let text = `L'aventurier ${character.name} est dans la salle [${room.posX}, ${room.posY}] du donjon ${dungeon.name}${northDoor ? '\nIl y a une porte au nord.' : ''}${eastDoor ? '\nIl y a une porte à l\'est.' : ''}${southDoor ? '\nIl y a une porte au sud.' : ''}${westDoor ? '\nIl y a une porte à l\'ouest.' : ''}`;
+
+            if (room.characters.length > 0) {
+                const characters = room.characters.map(character => character.name).filter(name => name !== character.name).join(', ');
+
+                if (!!characters) {
+                    text += `\n D'autres aventuriers semblent ce trouve dans cette pièce : ${characters}`;
+                }
+            }
+
+            if (room.monsters.length > 0) {
+                text += `\n Des monstres sont tapis dans l'obscurité de la pièce : ${room.monsters.map(monster => monster.name).join(', ')}`;
+            }
+
+            text += '\n\nQue fait-il ?';
+
+            message.channel.send(text);
         }
     });
 };
+
+const listCommand = new Command('adventure dungeons', 'List dungeons.');
+const createDungeonCommand = new Command('adventure create dungeon [name]', 'Create a new dungeon.');
+const createCharacterCommand = new Command('adventure create character [name]', 'Create a new character.');
+const listCharactersCommand = new Command('adventure characters', 'List characters.');
+const addCharacterToDungeonCommand = new Command('adventure add [character] into [dungeon]', 'Add character to dungeon.');
+const getCharacterStatusCommand = new Command('adventure [character]', 'Show character status.');
+const moveCharacterCommand = new Command('adventure [name] move at [direction]', 'Move character at next room.');
+const attackMonsterCommand = new Command('adventure [name] attack monster [name2]', 'Character attack monster');
 
 module.exports = client => {
     client.on('message', message => {
@@ -51,47 +87,39 @@ module.exports = client => {
             return;
         }
 
-        const listCommand = utils.command('/adventure list dungeons', message.content);
-        const createDungeonCommand = utils.command('/adventure create dungeon ([a-zA-Z0-9_]+)', message.content);
-        const createCharacterCommand = utils.command('/adventure create character ([a-zA-Z0-9_]+)', message.content);
-        const listCharactersCommand = utils.command('/adventure list characters', message.content);
-        const addCharacterToDungeonCommand = utils.command('/adventure add ([a-zA-Z0-9_]+) into ([a-zA-Z0-9_]+)', message.content);
-        const getCharacterStatusCommand = utils.command('/adventure status ([a-zA-Z0-9_]+)', message.content);
-        const moveCharacterCommand = utils.command('/adventure move ([a-zA-Z0-9_]+) at (north|east|south|west)', message.content);
-
-        if (!!listCommand) {
+        listCommand.match(message.content, () => {
             let dungeonNames = '';
             dungeons.forEach(dungeon => {
                 dungeonNames += `- ${dungeon.name}\n`;
             });
 
-            message.channel.sendMessage(`Liste des donjons : \n${dungeonNames != '' ? dungeonNames : 'Aucun'}`);
-        }
+            message.channel.send(`Liste des donjons : \n${dungeonNames != '' ? dungeonNames : 'Aucun'}`);
+        });
 
-        if (!!createDungeonCommand) {
-            request.post(`${apiUrl}/dungeons?name=${createDungeonCommand[0]}`, (err, res, body) => {
+        createDungeonCommand.match(message.content, ({ name }) => {
+            request.post(`${apiUrl}/dungeons?name=${name}`, (err, res, body) => {
                 if (!err && res.statusCode == 201) {
                     let data = JSON.parse(body).data;
 
-                    message.channel.sendMessage(`Nouveau donjon créé : ${data.name}`);
+                    message.channel.send(`Nouveau donjon créé : ${data.name}`);
                     refresh();
                 }
             });
-        }
+        });
 
-        if (!!createCharacterCommand) {
+        createCharacterCommand.match(message.content, ({ name }) => {
             let owner = message.author.username;
-            request.post(`${apiUrl}/characters?name=${createCharacterCommand[0]}&race=human&className=warrior&owner=${owner}`, (err, res, body) => {
+            request.post(`${apiUrl}/characters?name=${name}&race=human&className=warrior&owner=${owner}`, (err, res, body) => {
                 if (!err && res.statusCode == 201) {
                     let data = JSON.parse(body).data;
 
-                    message.channel.sendMessage(`Nouveau personnage créé pour ${owner} :\n${data.name}\n${data.race}\n${data.class}`);
+                    message.channel.send(`Nouveau personnage créé pour ${owner} :\n${data.name}\n${data.race}\n${data.class}`);
                     refresh();
                 }
             });
-        }
+        });
 
-        if (!!listCharactersCommand) {
+        listCharactersCommand.match(message.content, () => {
             const owner = message.author.username;
 
             request(`${apiUrl}/characters?owner=${owner}`, (err, res, body) => {
@@ -101,77 +129,126 @@ module.exports = client => {
                         characterNames += `- ${character.name} (${character.race} ${character.class})\n`;
                     });
 
-                    message.channel.sendMessage(`Liste des personnages de ${owner} : \n${characterNames != '' ? characterNames : 'Aucun'}`);
+                    message.channel.send(`Liste des personnages de ${owner} : \n${characterNames != '' ? characterNames : 'Aucun'}`);
                 }
             });
-        }
+        });
 
-        if (!!addCharacterToDungeonCommand) {
+        addCharacterToDungeonCommand.match(message.content, ({ character, dungeon }) => {
             const owner = message.author.username;
-            const character = characters.find(el => el.name == addCharacterToDungeonCommand[0]);
-            const dungeon = dungeons.find(el => el.name == addCharacterToDungeonCommand[1]);
+
+            character = characters.find(el => el.name == character);
+            dungeon = dungeons.find(el => el.name == dungeon);
 
             if (!character || character.owner != owner) {
-                return message.channel.sendMessage('Personnage incorrect.');
+                return message.channel.send('Personnage incorrect.');
             }
 
             if (!dungeon) {
-                return message.channel.sendMessage('Donjon incorrect.');
+                return message.channel.send('Donjon incorrect.');
             }
 
             request.put(`${apiUrl}/dungeons/${dungeon.id}/character/${character.id}`, (err, res, body) => {
                 if (!err && res.statusCode == 204) {
 
-                    message.channel.sendMessage(`${character.name} ajouté au donjon ${dungeon.name}.`);
+                    message.channel.send(`${character.name} ajouté au donjon ${dungeon.name}.`);
                     refresh();
                 }
             });
-        }
+        });
 
-        if (!!getCharacterStatusCommand) {
+        getCharacterStatusCommand.match(message.content, ({ character }) => {
             const owner = message.author.username;
-            const character = characters.find(el => el.name == getCharacterStatusCommand[0]);
+
+            character = characters.find(el => el.name == character);
 
             if (!character || character.owner != owner) {
-                return message.channel.sendMessage('Personnage incorrect.');
+                return message.channel.send('Personnage incorrect.');
             }
 
             const dungeon = dungeons.find(el => el.id == character.dungeon);
 
             if (!dungeon) {
-                return message.channel.sendMessage(`L'aventurier ${character.name} n'est pas encore dans un donjon.`);
+                return message.channel.send(`L'aventurier ${character.name} n'est pas encore dans un donjon.`);
             }
 
             sendCharacterStatus(dungeon, character, message);
-        }
+        });
 
-        if (!!moveCharacterCommand) {
+        moveCharacterCommand.match(message.content, ({ name, direction }) => {
             const owner = message.author.username;
-            let character = characters.find(el => el.name == moveCharacterCommand[0]);
 
+            let character = characters.find(el => el.name == name);
             if (!character || character.owner != owner) {
-                return message.channel.sendMessage('Personnage incorrect.');
+                return message.channel.send('Personnage incorrect.');
             }
 
             const dungeon = dungeons.find(el => el.id == character.dungeon);
 
             if (!dungeon) {
-                return message.channel.sendMessage(`L'aventurier ${character.name} n'est pas encore dans un donjon.`);
+                return message.channel.send(`L'aventurier ${character.name} n'est pas encore dans un donjon.`);
             }
 
-            request.put(`${apiUrl}/dungeons/${dungeon.id}/character/${character.id}/move/${moveCharacterCommand[1]}`, (err, res, body) => {
+            request.put(`${apiUrl}/dungeons/${dungeon.id}/character/${character.id}/move/${direction}`, (err, res, body) => {
                 if (!err && res.statusCode == 204) {
-                    message.channel.sendMessage(`${character.name} ce déplace...`);
+                    message.channel.send(`${character.name} ce déplace...`);
 
                     refreshCharacters(() => {
-                        character = characters.find(el => el.name == moveCharacterCommand[0]);
+                        character = characters.find(el => el.name == name);
                         sendCharacterStatus(dungeon, character, message);
                     });
                 } else if (res.statusCode == 422) {
-                    message.channel.sendMessage(`${character.name} ne peut pas faire cette action.`);
+                    message.channel.send(`${character.name} ne peut pas faire cette action. \nLes monstres peuvent bloquer le passage, ou la porte est fermée.`);
                 }
             });
-        }
+        });
+
+        attackMonsterCommand.match(message.content, ({ name, name2 }) => {
+            const owner = message.author.username;
+
+            let character = characters.find(el => el.name == name);
+            if (!character || character.owner != owner) {
+                return message.channel.send('Personnage incorrect.');
+            }
+
+            let monster = monsters.find(el => el.name == name2 && el.room == character.room);
+            if (!monster) {
+                return message.channel.send('Monstre incorrect.');
+            }
+
+            const dungeon = dungeons.find(el => el.id == character.dungeon);
+
+            if (!dungeon) {
+                return message.channel.send(`L'aventurier ${character.name} n'est pas encore dans un donjon.`);
+            }
+
+            request.put(`${apiUrl}/dungeons/${dungeon.id}/character/${character.id}/attack/monsters/${monster.id}`, (err, res, body) => {
+                if (!err && res.statusCode == 200) {
+                    const data = JSON.parse(body).data;
+
+                    let text = `${character.name} attaque ${monster.name}`;
+
+                    data.logs.forEach(log => {
+                        text += log.critic ? '\nCritique !' : '';
+                        text += `\n${log.from} inflige ${log.hit} à ${log.target}`;
+                    });
+
+                    if (data.character.life <= 0) {
+                        text += `\n${data.character.name} est mort.`
+                    }
+
+                    if (data.monster.life <= 0) {
+                        text += `\n${data.monster.name} est mort.`
+                    }
+
+                    message.channel.send(text);
+
+                    refresh();
+                } else if (res.statusCode == 422) {
+                    message.channel.send(`${character.name} ne peut pas faire cette action.`);
+                }
+            });
+        });
     });
 
     refresh();

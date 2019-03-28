@@ -1,5 +1,6 @@
 const config = require('./config.json');
 const opusscript = require('opusscript');
+const { createApp, createServer } = require('yion');
 
 const Discord = require('discord.js');
 const logger = require('./services/logger');
@@ -10,6 +11,10 @@ const client = new Discord.Client();
 const logChannel = null;
 const helpCommand = new Command('help', 'Display list of commands')
                         .option('-v', 'verbose', 'Display all options');
+
+const app = createApp();
+const httpServer = createServer(app);
+client.http = app;
 
 // extend limit of listener
 require('events').EventEmitter.defaultMaxListeners = 20;
@@ -57,8 +62,7 @@ require('./modules/tableflip')(client);
 require('./modules/voice')(client);
 require('./modules/player')(client);
 require('./modules/playlist')(client);
-require('./modules/crypto')(client);
-require('./modules/wolfuns')(client);
+//require('./modules/crypto')(client);
 //require('./modules/adventure')(client);
 
 if (!!config.monitoring) {
@@ -66,3 +70,4 @@ if (!!config.monitoring) {
 }
 
 client.login(config.tokens.token);
+httpServer.listen(config.http.port);

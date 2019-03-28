@@ -4,7 +4,7 @@ const DB = require('./../../../services/db');
 class PlaylistsRepository {
 
     constructor() {
-        this.collection = 'discord_playlists';
+        this.collection = 'playlists';
     }
 
     find() {
