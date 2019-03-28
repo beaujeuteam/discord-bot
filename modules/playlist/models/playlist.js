@@ -41,7 +41,7 @@ class Playlist {
                 });
 
                 if (!!this.channel) {
-                    this.channel.send(`Lecture de ${track.title} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
+                    this.channel.send(`Lecture de ${this.cleanTrack(track)} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
                 }
             })
             .catch(err => this.channel.send('An error occurred ' + error));
@@ -94,6 +94,10 @@ class Playlist {
         playlist.id = data._id;
 
         return playlist;
+    }
+
+    static cleanTrack(track) {
+        return track.replace(/(http:\/\/|https:\/\/)/, '');
     }
 }
 

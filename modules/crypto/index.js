@@ -5,9 +5,9 @@ const request = require('request');
 
 // @see https://coinmarketcap.com/api/
 const apiUrl = 'https://api.coinmarketcap.com/v1/ticker';
-const cryptoCmd = new Command('crypto [name]', 'Display crypto status.');
-const cryptoTimerCmd = new Command('crypto-timer [name] [time]', 'Display crypto status every x hour.');
-const cryptoTimerClearCmd = new Command('crypto-clear [name]', 'Clear timer for crypto.');
+const cryptoCmd = new Command('crypto [name]', 'Display crypto status.', 'cryptomonnaie');
+const cryptoTimerCmd = new Command('crypto-timer [name] [time]', 'Display crypto status every x hour.', 'cryptomonnaie');
+const cryptoTimerClearCmd = new Command('crypto-clear [name]', 'Clear timer for crypto.', 'cryptomonnaie');
 const timers = {};
 
 module.exports = client => {

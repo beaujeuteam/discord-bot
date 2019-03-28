@@ -9,7 +9,7 @@ const { Command, commands } = require('./services/commands');
 
 const client = new Discord.Client();
 const logChannel = null;
-const helpCommand = new Command('help', 'Display list of commands')
+const helpCommand = new Command('help', 'Display list of commands (use -v option for more information)', 'helper')
                         .option('-v', 'verbose', 'Display all options');
 
 const app = createApp();

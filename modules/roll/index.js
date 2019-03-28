@@ -1,7 +1,7 @@
 const utils = require('./../../services/utils');
 const { Command } = require('./../../services/commands');
 
-const rollCmd = new Command('roll <number>d<faces>', 'Roll dices.');
+const rollCmd = new Command('roll <number>d<faces>', 'Roll dices.', 'fun');
 
 module.exports = client => {
     client.on('message', message => {
