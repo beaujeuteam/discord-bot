@@ -49,7 +49,7 @@ client.on('message', message => {
 
 client.on('error', err => {
     console.error(err);
-    client.login(config.tokens.token);
+    process.exit(1);
 });
 
 require('./modules/ping')(client);

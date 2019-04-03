@@ -44,7 +44,7 @@ class Playlist {
                     this.channel.send(`Lecture de ${this.cleanTrack(track)} de la playlist "${this.name}" [${this.currentTrack + 1} / ${this.size}]`);
                 }
             })
-            .catch(err => this.channel.send('An error occurred ' + error));
+            .catch(err => this.channel.send('An error occurred ' + err));
     }
 
     next() {

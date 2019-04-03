@@ -129,6 +129,36 @@ class VoiceClient {
     }
 
     /**
+     * Make bot play unknown source
+     * @param {string} string
+     * @param {Object} [options={}]
+     * @return {Promise}
+     *
+     * @alias module:VoiceClient
+     */
+    playUnknown(string, options = {}) {
+        return new Promise((resolve, reject) => {
+            if (!this.connection) {
+                return reject(new Error('No connection.'));
+            }
+
+            options.volume = this.volume;
+            this.connection.playArbitraryInput(string, options);
+            this.player = this.connection.dispatcher;
+
+            this.player.on('start', () => {
+                logger.debug(`Play stream`);
+                resolve();
+            });
+
+            this.player.on('error', error => {
+                logger.debug(`Player error ${error}`);
+                reject(error);
+            });
+        });
+    }
+
+    /**
      * Make bot says text
      * @param {string} text
      * @param {string} [lang='fr']

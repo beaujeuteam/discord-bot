@@ -1,5 +1,4 @@
 const Discord = require('discord.js');
-const utils = require('./../../services/utils');
 const voiceClient = require('./../../services/voice-client');
 const { Command } = require('./../../services/commands');
 
@@ -28,7 +27,6 @@ module.exports = client => {
                 ) {
                     voiceClient.join(channel).then(() => {
                         voiceClient.playText('Salut').catch(err => message.reply(err));
-                        //voiceClient.playUrl('http://92.222.88.16:8981/live/da21501f-9cfb-46ef-a366-5df63c815f0f.flv').catch(err => message.reply(err));
                     }).catch(err => message.reply(err));
                 }
             });
@@ -36,7 +34,7 @@ module.exports = client => {
 
         leaveCmd.match(message.content, () => {
             voiceClient.playText('Au revoir')
-                .then(() => setTimeout(() => voiceClient.leave(), 2000))
+                .then(() => setTimeout(() => voiceClient.leave(), 3000))
                 .catch(err => message.reply(err));
         });
 

@@ -30,7 +30,7 @@ class DB {
      * @alias module:DB
      */
     connect(callback) {
-        if (!!this.db) {
+        if (this.db) {
             return callback();
         }
 
@@ -43,6 +43,16 @@ class DB {
 
             callback(error, db);
         });
+    }
+
+    /**
+     * @alias module:DB
+     */
+    close() {
+        if (this.db) {
+            this.db.close();
+            this.db = null;
+        }
     }
 }
 

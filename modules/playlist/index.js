@@ -1,34 +1,38 @@
 const Discord = require('discord.js');
-const utils = require('./../../services/utils');
 const Playlist = require('./models/playlist');
-const repository = require('./repositories/playlists');
-const radioRepository = require('./repositories/radio');
-const DB = require('./../../services/db');
+const Repository = require('./../../services/repository');
+
 const { Command } = require('./../../services/commands');
+const voiceClient = require('./../../services/voice-client');
 
 let playlists = [];
-let radios = {};
+let radios = [];
+let radioInfo = {};
+
+const repo = new Repository('playlists');
+const radioRepo = new Repository('streams');
 
 const findPlaylist = () => {
-    return repository.find().then(result => result.map(p => Playlist.unserialize(p)));
+    return repo.find().then(result => result.map(p => Playlist.unserialize(p)));
 }
 
-DB.connect(error => {
-    if (!error) {
-        findPlaylist().then(p => playlists = p);
-    }
-});
+const findRadio = () => {
+    return radioRepo.find();
+}
+
+findPlaylist().then(p => playlists = p);
+findRadio().then(p => radios = p);
+
+const radiolistCmd = new Command('radio', 'List all radios.');
+const radioPlayCmd = new Command('radio play [name]', 'Play radio.');
 
 const playlistCmd = new Command('playlist', 'List all playlist.');
 const playlistInfoCmd = new Command('playlist [name]', 'List songs of playlist.');
 const playlistPlayCmd = new Command('playlist play [name]', 'Play playlist.');
 const playlistPlaySongCmd = new Command('playlist play [name] <number>', 'Play song of playlist.');
 const playlistCurrentPlaySongCmd = new Command('playlist play <number>', 'Play song from current playlist.');
-//const playlistAddCmd = new Command('playlist add [urls] [name]', 'Add song from url(s) to playlist.');
 const playlistNextCmd = new Command('next', 'Play next song from playlist.');
 const playlistRandomizeCmd = new Command('randomize', 'Set randomize mod.');
-//const playlistDeleteCmd = new Command('playlist delete [name]', 'Delete playlist.');
-//const playlistDeleteSongCmd = new Command('playlist delete [name] <number>', 'Delete song from playlist.');
 
 module.exports = client => {
     client.http.post('/radio', (req, res) => {
@@ -38,18 +42,18 @@ module.exports = client => {
             return;
         }
 
-        if (radios[data.key]) {
-            clearTimeout(radios[data.key]);
-            radios[data.key] = setTimeout(() => delete radios[data.key], 1000 * 60 * 60 * 3);
+        if (radioInfo[data.key]) {
+            clearTimeout(radioInfo[data.key]);
+            radioInfo[data.key] = setTimeout(() => delete radioInfo[data.key], 1000 * 60 * 60 * 3);
         } else {
-            radioRepository.findOne(data.key).then(radio => {
+            radioRepo.findOne({ key: data.key }).then(radio => {
                 const message = `Nouvelle radio lancée !\n${radio.title} par @${radio.user}\nhttp://jukebox.beelab.tk/#/radio/${radio._id}`;
                 client.channels.find('name', client.config.channel_main).send(message);
             });
 
             res.send();
 
-            radios[data.key] = setTimeout(() => delete radios[data.key], 1000 * 60 * 60 * 3);
+            radioInfo[data.key] = setTimeout(() => delete radioInfo[data.key], 1000 * 60 * 60 * 3);
         }
     });
 
@@ -60,6 +64,30 @@ module.exports = client => {
         }
 
         findPlaylist().then(p => playlists = p);
+        findRadio().then(p => radios = p);
+
+        radiolistCmd.match(message.content, () => {
+            if (0 === radios.length) {
+                return message.channel.send(`Aucune radio.`);
+            }
+
+            let result = '';
+            radios.forEach(radio => result += `- "${radio.title}" par @${radio.user}\n`);
+
+            message.channel.send(`Les radios :\n${result}`);
+        });
+
+        radioPlayCmd.match(message.content, ({ name }) => {
+            const regexp = new RegExp(name, 'i');
+            const radio = radios.find(r => r.title.match(regexp));
+
+            if (!!radio) {
+                return voiceClient.playUnknown(`rtmp://stream.beelab.tk/live/${radio.key}`)
+                    .catch(err => message.reply('An error occurred ' + err));
+            }
+
+            message.channel.send(`Aucune radio "${name}" trouvée.`);
+        });
 
         playlistCmd.match(message.content, () => {
             if (0 === playlists.length) {
@@ -67,7 +95,7 @@ module.exports = client => {
             }
 
             let result = '';
-            playlists.forEach(playlist => result += `- "${playlist.name}" par ${playlist.user}\n`);
+            playlists.forEach(playlist => result += `- "${playlist.name}" par @${playlist.user}\n`);
 
             message.channel.send(`Les playlist :\n${result}`);
         });
@@ -125,56 +153,6 @@ module.exports = client => {
 
             message.channel.send(`Aucune playlist "${name}" trouvée.`);
         });
-
-        /*playlistAddCmd.match(message.content, ({ urls, name }) => {
-            let playlist = playlists.find(playlist => playlist.name === name);
-            let isNew = false;
-
-            if (!playlist) {
-                playlist = new Playlist(name);
-                playlists.push(playlist);
-                isNew = true;
-            }
-
-            const tracks = urls.split(',');
-            tracks.forEach(track => {
-                playlist.add(track.trim());
-                message.channel.send(`Ajout de ${Playlist.cleanTrack(track)} à la playlist ${playlist.name}`);
-            });
-
-            if (isNew) {
-                repository.insert(playlist.serialize()).then(p => {
-                    playlist.id = p._id;
-                    repository.update(playlist.serialize());
-                });
-            } else {
-                repository.update(playlist.serialize());
-            }
-        });*/
-
-        /*playlistDeleteCmd.match(message.content, ({ name }) => {
-            for (let i = 0; i < playlists.length; i++) {
-                if (playlists[i].name === name) {
-                    repository.remove(playlists[i].serialize());
-                    playlists.splice(i, 1);
-
-                    return message.channel.send(`Playlist "${name}" supprimée.`);
-                }
-            }
-        });*/
-
-        /*playlistDeleteSongCmd.match(message.content, ({ name, number }) => {
-            const playlist = playlists.find(playlist => playlist.name === name);
-
-            if (!!playlist) {
-                playlist.tracks.splice((number - 1), 1);
-                repository.update(playlist.serialize());
-
-                return message.channel.send(`Musique supprimée.`);
-            }
-
-            message.channel.send(`Aucune playlist "${name}" trouvée.`);
-        });*/
 
         playlistNextCmd.match(message.content, () => {
             const playlist = playlists.find(playlist => playlist.currentPlaylist);

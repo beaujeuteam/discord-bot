@@ -1,19 +1,15 @@
 const Discord = require('discord.js');
-const utils = require('./../../services/utils');
+const Repository = require('./../../services/repository');
+
 const voiceClient = require('./../../services/voice-client');
-const DB = require('./../../services/db');
 const { Command } = require('./../../services/commands');
-const repository = require('./repositories/songs');
 
 let songs = [
     { tag: 'ready', type: 'file', source: __dirname + '/musics/ready.mp3' }
-]
+];
 
-DB.connect(error => {
-    if (!error) {
-        repository.find().then(result => songs = songs.concat(result));
-    }
-});
+const repo = new Repository('discord_songs');
+repo.find().then(result => songs = songs.concat(result));
 
 const playCmd = new Command('play [source]', 'Tell at bot to play music from url or from tag.', 'music');
 const addCmd = new Command('add [source] [tag]', 'Add music source with tag.', 'music');
@@ -41,15 +37,20 @@ module.exports = client => {
                 source = song.source;
             }
 
-            voiceClient.playUrl(source)
-                .catch(err => message.reply('An error occurred ' + err));
+            try {
+                voiceClient.playUrl(source)
+                    .catch(err => message.reply('An error occurred ' + err));
+            } catch (err) {
+                voiceClient.playUnknown(source)
+                    .catch(err => message.reply('An error occurred ' + err));
+            }
         });
 
         addCmd.match(message.content, ({ source, tag }) => {
             const song = { tag, source, type: 'url' };
 
             songs.push(song);
-            repository.insert(song).then(() => console.log('ok')).catch(error => console.log(error));
+            repo.insert(song).then(() => console.log('ok')).catch(error => console.log(error));
 
             message.channel.send(`La source ${source} est maintenant rattachée au tag ${tag}.`);
         });
@@ -57,7 +58,7 @@ module.exports = client => {
         removeCmd.match(message.content, ({ tag }) => {
             for (let i = 0; i < songs.length; i++) {
                 if (songs[i].tag === tag) {
-                    repository.remove(songs[i]);
+                    repo.remove(songs[i]);
                     songs.splice(i, 1);
 
                     return message.channel.send(`Tag ${tag} supprimé.`);
