@@ -1,9 +1,21 @@
+const fs = require('fs');
 const stream = require('stream');
 const Discord = require('discord.js');
 const ytdl = require('ytdl-core');
 const request = require('request');
 const tts = require('./../lib/tts');
 const logger = require('./logger');
+
+/*const { Readable } = require('stream');
+
+const SILENCE_FRAME = Buffer.from([0xF8, 0xFF, 0xFE]);
+
+class Silence extends Readable {
+  _read() {
+      this.push(SILENCE_FRAME);
+      this.destroy();
+  }
+}*/
 
 /**
  * Voice client service for discord
@@ -14,8 +26,10 @@ class VoiceClient {
     constructor() {
         this.channel = null;
         this.connection = null;
+        //this.receiver = null;
         this.player = null;
         this.volume = 1;
+        //this.id = 0;
     }
 
     /**
@@ -36,12 +50,42 @@ class VoiceClient {
                     .then(connection => {
                         this.connection = connection;
                         this.channel = channel;
+                        //this.receiver = this.connection.createReceiver();
+
+                        //this.connection.playOpusStream(new Silence());
+
+                        //console.log(this.connection);
+
+                        /*this.connection.on('speaking', (user, speaking) => {
+                            // https://github.com/discordjs/discord.js/issues/2929#issuecomment-458584532
+                            if (speaking) {
+                                this.id++;
+                                //const outputStream = fs.createWriteStream(`${this.id}-${user.username}-stream.wav`);
+                                //const audioStream = this.connection.receiver.createStream(user, { mode: 'pcm' });
+                                const audioStream = this.receiver.createPCMStream(user);
+                                this.connection.playStream(audioStream);
+
+                                //audioStream.pipe(outputStream);
+
+                                audioStream.on('data', (data) => {
+                                    //console.log(data);
+                                    //console.log(audioStream);
+                                    //outputStream.write(data);
+                                });
+
+                                audioStream.on('end', () => {
+                                    console.log('END');
+                                    //outputStream.end();
+                                    //const cmd = spawn('pocketsphinx_continuous', ['-dict', __dirname + '/../lib/models/fr-FR/fr.dict', '-hmm', __dirname + '/../lib/models/fr-FR/french', '-lm', __dirname + '/../lib/models/fr-FR/fr.lm.dmp', '-infile', `${user.username}-stream.wav`]);
+                                    //pocketsphinx_continuous -dict /usr/share/pocketsphinx/model/fr_FR/frenchWords62K.dic -hmm /usr/share/pocketsphinx/model/fr_FR/french_f0/ -lm /usr/share/pocketsphinx/model/fr_FR/french3g62K.lm.dmp -inmic yes
+                                });
+                            }
+                        });*/
 
                         logger.debug(`Connected to channel ${this.channel.name}`);
 
                         resolve();
-                    })
-                    .catch(err => reject(err));
+                    });
             } else {
                 reject('Not joinable');
             }
@@ -148,7 +192,7 @@ class VoiceClient {
 
             this.player.on('start', () => {
                 logger.debug(`Play stream`);
-                resolve();
+                resolve(this.player);
             });
 
             this.player.on('error', error => {
@@ -162,6 +206,7 @@ class VoiceClient {
      * Make bot says text
      * @param {string} text
      * @param {string} [lang='fr']
+     * @return {Promise}
      *
      * @alias module:VoiceClient
      */
@@ -199,9 +244,11 @@ class VoiceClient {
 
                         const bufferStream = new stream.PassThrough();
                         bufferStream.end(content);
-                        this.player = this.connection.playStream(bufferStream);
 
-                        resolve(content);
+                        this.player = this.connection.playStream(bufferStream);
+                        this.player.on('end', () => {
+                            resolve(content);
+                        });
                     }
                 });
             }

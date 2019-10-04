@@ -25,17 +25,17 @@ module.exports = client => {
                     channel instanceof Discord.VoiceChannel &&
                     !!channel.members.get(message.author.id)
                 ) {
-                    voiceClient.join(channel).then(() => {
-                        voiceClient.playText('Salut').catch(err => message.reply(err));
-                    }).catch(err => message.reply(err));
+                    voiceClient.join(channel)
+                        .then(() => voiceClient.playText('Salut'))
+                        .catch(err => message.reply('An error occurred ' + err));
                 }
             });
         });
 
         leaveCmd.match(message.content, () => {
             voiceClient.playText('Au revoir')
-                .then(() => setTimeout(() => voiceClient.leave(), 3000))
-                .catch(err => message.reply(err));
+                .then(() => voiceClient.leave())
+                .catch(err => message.reply('An error occurred ' + err));
         });
 
         sayCmd.match(message.content, ({ text }, { fr, de, ru, es, us }) => {
@@ -47,7 +47,7 @@ module.exports = client => {
             lang = us ? 'us' : lang;
 
             voiceClient.playText(text, lang)
-                .catch(err => message.send('An error occurred ' + err));
+                .catch(err => message.reply('An error occurred ' + err));
         });
     });
 };

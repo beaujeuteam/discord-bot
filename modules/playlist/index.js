@@ -14,11 +14,17 @@ const radioRepo = new Repository('streams');
 
 const findPlaylist = () => {
     return repo.find().then(result => result.map(p => Playlist.unserialize(p)));
-}
+};
 
 const findRadio = () => {
     return radioRepo.find();
-}
+};
+
+const playRadio = (key, message) => {
+    return voiceClient.playUnknown(`rtmp://stream.beelab.tk/live/${key}`, {})
+        .then(player => player.on('end', () => playRadio(key, message)))
+        .catch(err => message.reply('An error occurred ' + err));
+};
 
 findPlaylist().then(p => playlists = p);
 findRadio().then(p => radios = p);
@@ -82,8 +88,7 @@ module.exports = client => {
             const radio = radios.find(r => r.title.match(regexp));
 
             if (!!radio) {
-                return voiceClient.playUnknown(`rtmp://stream.beelab.tk/live/${radio.key}`)
-                    .catch(err => message.reply('An error occurred ' + err));
+                playRadio(radio.key, message);
             }
 
             message.channel.send(`Aucune radio "${name}" trouvée.`);

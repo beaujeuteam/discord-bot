@@ -1,5 +1,4 @@
 const config = require('./config.json');
-const opusscript = require('opusscript');
 const { createApp, createServer } = require('yion');
 
 const Discord = require('discord.js');

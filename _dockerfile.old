@@ -1,6 +1,6 @@
 FROM alpine:latest
 
-RUN apk add --update nodejs npm python-dev bash libstdc++
+RUN apk add --update nodejs npm python-dev bash libstdc++ git make gcc g++ automake autoconf libtool bison swig linux-headers
 RUN apk add --update ffmpeg
 
 RUN mkdir -p /home/app
