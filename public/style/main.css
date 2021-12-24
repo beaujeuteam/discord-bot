@@ -1,0 +1,16 @@
+@font-face {
+    font-family: VarelaRound;
+    src: url('/fonts/VarelaRound-Regular.ttf');
+}
+
+body {
+    font-family: VarelaRound, Arial, sans-serif;
+    color: #0a0a0a;
+    font-size: 20px;
+
+    margin: 0;
+    padding: 0;
+
+    box-sizing: border-box;
+    background: #f7f8f8 url('/images/pattern.png') repeat scroll 0% 0%;
+}

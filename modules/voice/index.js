@@ -1,9 +1,10 @@
-const Discord = require('discord.js');
 const voiceClient = require('./../../services/voice-client');
 const { Command } = require('./../../services/commands');
+const logger = require('./../../services/logger');
 
 const joinCmd = new Command('join', 'Tell at bot to join vocal channel.', 'voice');
 const leaveCmd = new Command('leave', 'Tell at bot to leave current vocal channel.', 'voice');
+const restartCmd = new Command('restart', 'Force restart bot', 'voice');
 const sayCmd = new Command('say [text]', 'Tell at bot to say something.', 'voice')
     .option('-f', 'fr', 'Use French language')
     .option('-d', 'de', 'Use German language')
@@ -20,22 +21,18 @@ module.exports = client => {
         }
 
         joinCmd.match(message.content, () => {
-            client.channels.forEach(channel => {
-                if (
-                    channel instanceof Discord.VoiceChannel &&
-                    !!channel.members.get(message.author.id)
-                ) {
-                    voiceClient.join(channel)
-                        .then(() => voiceClient.playText('Salut'))
-                        .catch(err => message.reply('An error occurred ' + err));
-                }
-            });
+            voiceClient.join(message.member.voice.channel)
+                .then(() => voiceClient.playText('Salut'))
+                .catch(err => message.reply('An error occurred ' + String(err)));
         });
 
         leaveCmd.match(message.content, () => {
             voiceClient.playText('Au revoir')
                 .then(() => voiceClient.leave())
-                .catch(err => message.reply('An error occurred ' + err));
+                .catch(err => {
+                    voiceClient.leave();
+                    message.reply('An error occurred ' + String(err));
+                });
         });
 
         sayCmd.match(message.content, ({ text }, { fr, de, ru, es, us }) => {
@@ -48,6 +45,13 @@ module.exports = client => {
 
             voiceClient.playText(text, lang)
                 .catch(err => message.reply('An error occurred ' + err));
+        });
+
+        restartCmd.match(message.content, () => {
+            voiceClient.leave();
+            logger.debug('Force to restart');
+
+            return process.exit(1);
         });
     });
 };

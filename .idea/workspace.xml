@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="9be643fc-d92b-4749-a4f7-949010228cd3" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/Dockerfile" beforeDir="false" afterPath="$PROJECT_DIR$/Dockerfile" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/crypto/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/modules/crypto/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/player/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/modules/player/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/player/musics/ready.mp3" beforeDir="false" afterPath="$PROJECT_DIR$/modules/player/musics/ready.mp3" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/playlist/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/modules/playlist/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/playlist/models/playlist.js" beforeDir="false" afterPath="$PROJECT_DIR$/modules/playlist/models/playlist.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/modules/voice/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/modules/voice/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/commands.js" beforeDir="false" afterPath="$PROJECT_DIR$/services/commands.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/voice-client.js" beforeDir="false" afterPath="$PROJECT_DIR$/services/voice-client.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ComposerSettings">
+    <execution />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1kEvZ98kJj0JYf2vkEJWQgTGwEC" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/../beelab/aube" />
+    <property name="nodejs_package_manager_path" value="npm" />
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9be643fc-d92b-4749-a4f7-949010228cd3" name="Default Changelist" comment="" />
+      <created>1605278618521</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1605278618521</updated>
+      <workItem from="1605278619622" duration="1975000" />
+      <workItem from="1605284703871" duration="25000" />
+      <workItem from="1605289845666" duration="319000" />
+      <workItem from="1605295505622" duration="7064000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="2423" y="297" width="424" height="478" key="FileChooserDialogImpl" timestamp="1605278654641">
+      <screen x="1680" y="0" width="1920" height="1080" />
+    </state>
+    <state x="2423" y="297" width="424" height="478" key="FileChooserDialogImpl/1680.0.1920.1080/0.17.1680.1050@1680.0.1920.1080" timestamp="1605278654641" />
+    <state x="545" y="274" width="589" height="534" key="find.popup" timestamp="1605289883146">
+      <screen x="0" y="17" width="1680" height="1050" />
+    </state>
+    <state x="545" y="274" width="589" height="534" key="find.popup/1680.0.1920.1080/0.17.1680.1050@0.17.1680.1050" timestamp="1605289883146" />
+  </component>
+</project>

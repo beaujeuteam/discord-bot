@@ -1,19 +1,30 @@
 const config = require('./config.json');
+const bodyParser = require('yion-body-parser');
 const { createApp, createServer } = require('yion');
 
 const Discord = require('discord.js');
 const logger = require('./services/logger');
-const utils = require('./services/utils');
 const { Command, commands } = require('./services/commands');
 
 const client = new Discord.Client();
-const logChannel = null;
 const helpCommand = new Command('help', 'Display list of commands (use -v option for more information)', 'helper')
                         .option('-v', 'verbose', 'Display all options');
 
 const app = createApp();
-const httpServer = createServer(app);
+const httpServer = createServer(app, [bodyParser]);
 client.http = app;
+
+app.link('/fonts', __dirname + '/public/fonts');
+app.link('/style', __dirname + '/public/style');
+app.link('/script', __dirname + '/public/script');
+app.link('/components', __dirname + '/public/components');
+app.link('/services', __dirname + '/public/services');
+app.link('/images', __dirname + '/public/images');
+app.link('/modules', __dirname + '/node_modules');
+
+app.get('/soundbox', (req, res) => {
+    res.sendFile(__dirname + '/public/soundbox.html', 'soundbox.html', 'text/html', false);
+});
 
 // extend limit of listener
 require('events').EventEmitter.defaultMaxListeners = 20;
@@ -23,7 +34,7 @@ client.on('ready', () => {
 
     if (!!config.debug) {
         logger.setClient(client);
-        logger.setChannel(client.channels.find('name', config.channel_debug));
+        logger.setChannel(client.channels.cache.get(config.channel_debug));
     }
 
     client.logger = logger;

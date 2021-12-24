@@ -1,12 +1,12 @@
-FROM alpine:latest
+FROM node:latest
 
-RUN apk add --update nodejs npm python-dev bash libstdc++
-RUN apk add --update ffmpeg
-
+RUN apt install -y bash
 RUN mkdir -p /home/app
 WORKDIR /home/app
 
 COPY . /home/app
+
+RUN rm -rf node_modules && npm install
 
 EXPOSE 9013
 

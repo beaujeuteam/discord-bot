@@ -49,7 +49,7 @@ module.exports = client => {
         });
 
         cryptoTimerCmd.match(message.content, ({ name, time }) => {
-            const channel = client.channels.find('name', config.channel_crypto);
+            const channel = client.channels.cache.get(config.channel_crypto);
             if (null !== channel) {
                 clearInterval(timers[name]);
                 timers[name] = setInterval(() => {

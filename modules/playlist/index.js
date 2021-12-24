@@ -8,6 +8,7 @@ const voiceClient = require('./../../services/voice-client');
 let playlists = [];
 let radios = [];
 let radioInfo = {};
+let current = null;
 
 const repo = new Repository('playlists');
 const radioRepo = new Repository('streams');
@@ -21,8 +22,14 @@ const findRadio = () => {
 };
 
 const playRadio = (key, message) => {
-    return voiceClient.playUnknown(`rtmp://stream.beelab.tk/live/${key}`, {})
-        .then(player => player.on('end', () => playRadio(key, message)))
+    console.log(`play stream rtmp://stream.beelab.tk/live/${key}`);
+
+    return voiceClient.playStream(`rtmp://stream.beelab.tk/live/${key}`)
+        .then(player => player.on('speaking', speaking => {
+            if (player.playing && !speaking) {
+                return playRadio(key, message);
+            }
+        }))
         .catch(err => message.reply('An error occurred ' + err));
 };
 
@@ -35,8 +42,8 @@ const radioPlayCmd = new Command('radio play [name]', 'Play radio.');
 const playlistCmd = new Command('playlist', 'List all playlist.');
 const playlistInfoCmd = new Command('playlist [name]', 'List songs of playlist.');
 const playlistPlayCmd = new Command('playlist play [name]', 'Play playlist.');
-const playlistPlaySongCmd = new Command('playlist play [name] <number>', 'Play song of playlist.');
-const playlistCurrentPlaySongCmd = new Command('playlist play <number>', 'Play song from current playlist.');
+//const playlistPlaySongCmd = new Command('playlist play [name] <number>', 'Play song of playlist.');
+//const playlistCurrentPlaySongCmd = new Command('playlist play <number>', 'Play song from current playlist.');
 const playlistNextCmd = new Command('next', 'Play next song from playlist.');
 const playlistRandomizeCmd = new Command('randomize', 'Set randomize mod.');
 
@@ -54,7 +61,7 @@ module.exports = client => {
         } else {
             radioRepo.findOne({ key: data.key }).then(radio => {
                 const message = `Nouvelle radio lancée !\n${radio.title} par @${radio.user}\nhttp://jukebox.beelab.tk/#/radio/${radio._id}`;
-                client.channels.find('name', client.config.channel_main).send(message);
+                client.channels.cache.get(client.config.channel_main).send(message);
             });
 
             res.send();
@@ -72,6 +79,10 @@ module.exports = client => {
         findPlaylist().then(p => playlists = p);
         findRadio().then(p => radios = p);
 
+        if (message.content.match('/stop')) {
+            current = null;
+        }
+
         radiolistCmd.match(message.content, () => {
             if (0 === radios.length) {
                 return message.channel.send(`Aucune radio.`);
@@ -88,7 +99,8 @@ module.exports = client => {
             const radio = radios.find(r => r.title.match(regexp));
 
             if (!!radio) {
-                playRadio(radio.key, message);
+                message.reply(`Radio ${name} trouvée !`);
+                return playRadio(radio.key, message);
             }
 
             message.channel.send(`Aucune radio "${name}" trouvée.`);
@@ -110,7 +122,7 @@ module.exports = client => {
             const playlist = playlists.find(playlist => playlist.name.match(regexp));
 
             if (!!playlist) {
-                let result = `${playlist.name} : http://jukebox.beaujeuteam.fr/#/playlist/${playlist.id}\n`;
+                let result = `${playlist.name} : http://jukebox.beelab.tk/#/playlist/${playlist.id}\n`;
                 playlist.tracks.forEach(track => result += `- ${track.title}\n`);
 
                 return message.channel.send(result);
@@ -119,29 +131,26 @@ module.exports = client => {
             message.channel.send(`Aucune playlist "${name}" trouvée.`);
         });
 
-        playlistCurrentPlaySongCmd.match(message.content, ({ number }) => {
-            const playlist = playlists.find(playlist => playlist.currentPlaylist);
-
-            if (!!playlist) {
-                return playlist.play(message.channel, parseInt(number) - 1);
+        /*playlistCurrentPlaySongCmd.match(message.content, ({ number }) => {
+            if (!!current) {
+                return current.play(message.channel, parseInt(number) - 1);
             }
 
             message.channel.send(`Aucune playlist en cours.`);
-        });
+        });*/
 
-        playlistPlaySongCmd.match(message.content, ({ name, number }) => {
+        /*playlistPlaySongCmd.match(message.content, ({ name, number }) => {
             const regexp = new RegExp(name, 'i');
             const playlist = playlists.find(playlist => playlist.name.match(regexp));
 
             if (!!playlist) {
-                playlists.forEach(playlist => playlist.currentPlaylist = false);
-                playlist.currentPlaylist = true;
+                current = playlist;
 
                 return playlist.play(message.channel, parseInt(number) - 1);
             }
 
             message.channel.send(`Aucune playlist "${name}" trouvée.`);
-        });
+        });*/
 
         playlistPlayCmd.match(message.content, ({ name }) => {
             playlists.forEach(playlist => playlist.currentPlaylist = false);
@@ -150,31 +159,27 @@ module.exports = client => {
             const playlist = playlists.find(playlist => playlist.name.match(regexp));
 
             if (!!playlist) {
-                playlist.currentPlaylist = true;
-                playlist.reset();
+                current = playlist;
+                current.reset();
 
-                return playlist.play(message.channel);
+                return current.play(message.channel);
             }
 
             message.channel.send(`Aucune playlist "${name}" trouvée.`);
         });
 
         playlistNextCmd.match(message.content, () => {
-            const playlist = playlists.find(playlist => playlist.currentPlaylist);
-
-            if (!!playlist) {
-                return playlist.stop('skip song');
+            if (!!current) {
+                return current.stop('skip song');
             }
 
             message.channel.send(`Aucune playlist en cours de lecture.`);
         });
 
         playlistRandomizeCmd.match(message.content, () => {
-            const playlist = playlists.find(playlist => playlist.currentPlaylist);
-
-            if (!!playlist) {
-                playlist.randomize();
-                return message.channel.send(`Lecture aléatoire : ${playlist.random ? 'activée' : 'désactivée' }`);
+            if (!!current) {
+                current.randomize();
+                return message.channel.send(`Lecture aléatoire : ${current.random ? 'activée' : 'désactivée' }`);
             }
 
             message.channel.send(`Aucune playlist en cours de lecture.`);

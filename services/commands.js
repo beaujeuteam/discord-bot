@@ -108,7 +108,7 @@ class Command {
     /**
      * Check if text match command pattern
      * @param {string} text
-     * @param {Callable} callback
+     * @param {function(): *} callback
      *
      * @alias module:Command
      */

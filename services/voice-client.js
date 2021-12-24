@@ -1,10 +1,11 @@
+require('@discordjs/opus');
+
 const fs = require('fs');
 const stream = require('stream');
 const Discord = require('discord.js');
-const ytdl = require('ytdl-core');
-const request = require('request');
 const tts = require('./../lib/tts');
 const logger = require('./logger');
+const { matcher } = require('@beelab/toolbox');
 
 /*const { Readable } = require('stream');
 
@@ -28,6 +29,7 @@ class VoiceClient {
         this.connection = null;
         //this.receiver = null;
         this.player = null;
+        this.playing = false;
         this.volume = 1;
         //this.id = 0;
     }
@@ -63,7 +65,7 @@ class VoiceClient {
                                 //const outputStream = fs.createWriteStream(`${this.id}-${user.username}-stream.wav`);
                                 //const audioStream = this.connection.receiver.createStream(user, { mode: 'pcm' });
                                 const audioStream = this.receiver.createPCMStream(user);
-                                this.connection.playStream(audioStream);
+                                this.connection.playSœtream(audioStream);
 
                                 //audioStream.pipe(outputStream);
 
@@ -101,8 +103,10 @@ class VoiceClient {
         if (!!this.connection) {
             logger.debug(`Leave channel ${this.channel.name}`);
 
-            this.player.end('Stop by leaving');
-            this.player = null;
+            if (this.player) {
+                this.player.end('Stop by leaving');
+                this.player = null;
+            }
 
             this.connection.disconnect();
             this.connection = null;
@@ -114,37 +118,45 @@ class VoiceClient {
 
     /**
      * Make bot play music file
-     * @param {string} file
-     * @param {Callable} [callback]
+     * @param {string} path
      * @param {Object} [options={}]
      *
      * @alias module:VoiceClient
      */
-    playFile(file, callback = () => {}, options = {}) {
+    playFile(path, options = {}) {
         return new Promise((resolve, reject) => {
             if (!this.connection) {
                 return reject(new Error('No connection.'));
             }
 
+            this.stop('skip');
+
             options.volume = this.volume;
-            this.connection.playFile(file, options);
+            this.connection.play(path, options);
             this.player = this.connection.dispatcher;
 
-            this.player.on('start', () => {
-                logger.debug(`Play file ${file}`);
+            this.player.once('start', () => {
+                this.playing = true;
+                logger.debug(`Play file ${path}`);
                 resolve();
             });
 
-            this.player.on('error', error => {
+            this.player.once('error', error => {
                 logger.debug(`Player error ${error}`);
+                this.stop(String(error));
                 reject(error);
+            });
+
+            this.player.once('finish', () => {
+                this.playing = false;
+                this.player = null;
             });
         });
     }
 
     /**
      * Make bot play stream
-     * @param {Stream} stream
+     * @param {Stream|*} stream
      * @param {Object} [options={}]
      * @return {Promise}
      *
@@ -156,48 +168,27 @@ class VoiceClient {
                 return reject(new Error('No connection.'));
             }
 
-            options.volume = this.volume;
-            this.connection.playStream(stream, options);
-            this.player = this.connection.dispatcher;
-
-            this.player.on('start', () => {
-                logger.debug(`Play stream`);
-                resolve();
-            });
-
-            this.player.on('error', error => {
-                logger.debug(`Player error ${error}`);
-                reject(error);
-            });
-        });
-    }
-
-    /**
-     * Make bot play unknown source
-     * @param {string} string
-     * @param {Object} [options={}]
-     * @return {Promise}
-     *
-     * @alias module:VoiceClient
-     */
-    playUnknown(string, options = {}) {
-        return new Promise((resolve, reject) => {
-            if (!this.connection) {
-                return reject(new Error('No connection.'));
-            }
+            this.stop('skip');
 
             options.volume = this.volume;
-            this.connection.playArbitraryInput(string, options);
+            this.connection.play(stream, options);
             this.player = this.connection.dispatcher;
 
-            this.player.on('start', () => {
+            this.player.once('start', () => {
+                this.playing = true;
                 logger.debug(`Play stream`);
                 resolve(this.player);
             });
 
-            this.player.on('error', error => {
+            this.player.once('error', error => {
                 logger.debug(`Player error ${error}`);
+                this.stop(String(error));
                 reject(error);
+            });
+
+            this.player.once('finish', () => {
+                this.playing = false;
+                this.player = null;
             });
         });
     }
@@ -215,6 +206,8 @@ class VoiceClient {
             if (!this.connection) {
                 return reject();
             }
+
+            this.stop('skip');
 
             const config = require('./../config.json').tokens;
             const languages = {
@@ -245,8 +238,14 @@ class VoiceClient {
                         const bufferStream = new stream.PassThrough();
                         bufferStream.end(content);
 
-                        this.player = this.connection.playStream(bufferStream);
-                        this.player.on('end', () => {
+                        this.player = this.connection.play(bufferStream);
+
+                        this.player.once('start', () => {
+                            this.playing = true;
+                        });
+
+                        this.player.once('finish', () => {
+                            this.playing = false;
                             resolve(content);
                         });
                     }
@@ -264,20 +263,14 @@ class VoiceClient {
      * @alias module:VoiceClient
      */
     playUrl(url, options = {}) {
-        let stream = null;
-
         logger.debug(`Play URL ${url}`);
-
-        if (url.match(/youtube.com\/watch\?v=(.*)/i)) {
+        const match = matcher.matchYoutube(url);
+        if (match) {
             logger.debug(`Youtube link matching`);
-            stream = ytdl(url, { quality: 'lowest', filter: 'audioonly' });
-
-            stream.on('error', err => logger.error(`Error with youtube stream : ${err.message}`));
-        } else {
-            stream = request(url);
+            return this.playStream(`http://jukebox.beelab.tk/audio/${match.result}/file?quality=hight`);
         }
 
-        return this.playStream(stream);
+        return this.playStream(url, options);
     }
 
     /**
@@ -287,40 +280,12 @@ class VoiceClient {
      * @alias module:VoiceClient
      */
     stop(reason = null) {
-        if (null !== this.player) {
-            logger.debug(`Player stop`);
+        if (null !== this.player && this.playing) {
+            this.playing = false;
             this.player.end(reason);
-        }
-    }
+            this.player = null;
 
-    /**
-     * Pause or resume music
-     *
-     * @alias module:VoiceClient
-     */
-    pause() {
-        if (null !== this.player && !this.player.paused) {
-            logger.debug(`Player pause`);
-            this.player.pause();
-        } else if (null !== this.player && this.player.paused) {
-            logger.debug(`Player resume`);
-            this.player.resume();
-        }
-    }
-
-    /**
-     * Set volume between 0 and 2
-     * @param {number} volume
-     *
-     * @alias module:VoiceClient
-     */
-    setVolume(volume) {
-        const newVolume = volume >= 0 && volume <= 2 ? volume : 1;
-        if (null !== this.player) {
-            logger.debug(`Set volume at ${newVolume}`);
-
-            this.volume = newVolume;
-            this.player.setVolume(newVolume);
+            logger.debug(`Player stop for reason ${reason}`);
         }
     }
 }
