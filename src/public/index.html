@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta name="robots" content="index, follow" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Soundboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #1a1a2e;
+      --surface: #16213e;
+      --surface2: #0f3460;
+      --accent: #e94560;
+      --accent-hover: #c73652;
+      --text: #eaeaea;
+      --text-muted: #8892a4;
+      --border: #2a2a4a;
+      --success: #4caf50;
+      --danger: #e94560;
+      --radius: 10px;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    header h1 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      flex: 1;
+    }
+
+    .context-bar {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    select {
+      background: var(--surface2);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.45rem 0.75rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      outline: none;
+    }
+
+    select:focus { border-color: var(--accent); }
+
+    .badge {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    main {
+      flex: 1;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Upload zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+    }
+
+    .upload-zone:hover, .upload-zone.dragging {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    .upload-zone p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.4rem; }
+
+    .upload-zone .icon { font-size: 2rem; }
+
+    #file-input { display: none; }
+
+    /* Sound grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+    }
+
+    .tile {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 0.75rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.6rem;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      position: relative;
+      min-height: 110px;
+      text-align: center;
+      user-select: none;
+    }
+
+    .tile:hover {
+      background: var(--surface2);
+      border-color: var(--accent);
+    }
+
+    .tile:active { transform: scale(0.96); }
+
+    .tile.playing {
+      border-color: var(--success);
+      background: #1a2e1a;
+    }
+
+    .tile .sound-icon { font-size: 1.8rem; pointer-events: none; }
+
+    .tile .sound-name {
+      font-size: 0.8rem;
+      color: var(--text);
+      word-break: break-word;
+      line-height: 1.3;
+      pointer-events: none;
+    }
+
+    .tile .delete-btn {
+      position: absolute;
+      top: 5px;
+      right: 6px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: pointer;
+      padding: 2px 4px;
+      border-radius: 4px;
+      line-height: 1;
+      opacity: 0;
+      transition: opacity 0.15s, color 0.15s;
+    }
+
+    .tile:hover .delete-btn { opacity: 1; }
+    .tile .delete-btn:hover { color: var(--danger); }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 1rem;
+      font-size: 0.95rem;
+    }
+
+    /* Toast */
+    #toast-container {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: var(--surface2);
+      color: var(--text);
+      border-left: 4px solid var(--accent);
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      animation: slide-in 0.2s ease;
+      max-width: 320px;
+    }
+
+    .toast.success { border-color: var(--success); }
+    .toast.error { border-color: var(--danger); }
+
+    @keyframes slide-in {
+      from { transform: translateX(120%); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    /* Progress bar while uploading */
+    .uploading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 500;
+    }
+
+    .uploading-box {
+      background: var(--surface);
+      padding: 2rem 2.5rem;
+      border-radius: var(--radius);
+      text-align: center;
+      color: var(--text);
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 480px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🎵 Soundboard</h1>
+  <div class="context-bar">
+    <select id="guild-select">
+      <option value="">-- Serveur --</option>
+    </select>
+    <select id="channel-select" disabled>
+      <option value="">-- Canal vocal --</option>
+    </select>
+    <span class="badge" id="status-badge"></span>
+  </div>
+</header>
+
+<main>
+  <div class="upload-zone" id="upload-zone">
+    <div class="icon">📂</div>
+    <strong>Déposer un fichier audio ici</strong>
+    <p>ou cliquer pour choisir — MP3, WAV, OGG, FLAC, AAC, OPUS (max 20 Mo)</p>
+    <input type="file" id="file-input" accept=".mp3,.wav,.ogg,.flac,.aac,.opus,.m4a,.webm" multiple />
+  </div>
+
+  <div class="grid" id="sound-grid"></div>
+</main>
+
+<div id="toast-container"></div>
+
+<script>
+  const guildSelect   = document.getElementById('guild-select');
+  const channelSelect = document.getElementById('channel-select');
+  const statusBadge   = document.getElementById('status-badge');
+  const uploadZone    = document.getElementById('upload-zone');
+  const fileInput     = document.getElementById('file-input');
+  const soundGrid     = document.getElementById('sound-grid');
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let sounds = [];
+
+  // ── Toast ──────────────────────────────────────────────────────────────────
+  function toast(msg, type = 'info') {
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    el.textContent = msg;
+    document.getElementById('toast-container').appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  // ── API helpers ────────────────────────────────────────────────────────────
+  async function apiFetch(path, opts = {}) {
+    const res = await fetch(path, opts);
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json.error || `HTTP ${res.status}`);
+    return json;
+  }
+
+  // ── Guilds & channels ──────────────────────────────────────────────────────
+  async function loadGuilds() {
+    try {
+      const guilds = await apiFetch('/api/guilds');
+      guildSelect.innerHTML = '<option value="">-- Serveur --</option>';
+      guilds.forEach(g => {
+        const opt = document.createElement('option');
+        opt.value = g.id;
+        opt.textContent = g.name;
+        opt.selected = true;
+        guildSelect.appendChild(opt);
+      });
+      // Restore saved selection
+      const saved = localStorage.getItem('guildId');
+      if (saved && guilds.find(g => g.id === saved)) {
+        guildSelect.value = saved;
+        await loadChannels(saved);
+      }
+    } catch (e) {
+      toast('Impossible de charger les serveurs : ' + e.message, 'error');
+    }
+  }
+
+  async function loadChannels(guildId) {
+    channelSelect.disabled = true;
+    channelSelect.innerHTML = '<option value="">-- Canal vocal --</option>';
+    if (!guildId) return;
+    try {
+      const channels = await apiFetch(`/api/guilds/${guildId}/channels`);
+      channels.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.name;
+        channelSelect.appendChild(opt);
+      });
+      channelSelect.disabled = false;
+      // Restore saved selection
+      const saved = localStorage.getItem('channelId');
+      if (saved && channels.find(c => c.id === saved)) {
+        channelSelect.value = saved;
+      }
+      updateBadge();
+    } catch (e) {
+      toast('Impossible de charger les canaux : ' + e.message, 'error');
+    }
+  }
+
+  function updateBadge() {
+    const gName = guildSelect.options[guildSelect.selectedIndex]?.text;
+    const cName = channelSelect.options[channelSelect.selectedIndex]?.text;
+    if (guildSelect.value && channelSelect.value) {
+      statusBadge.textContent = `${gName} › ${cName}`;
+    } else {
+      statusBadge.textContent = '';
+    }
+  }
+
+  guildSelect.addEventListener('change', async () => {
+    localStorage.setItem('guildId', guildSelect.value);
+    channelSelect.innerHTML = '<option value="">-- Canal vocal --</option>';
+    channelSelect.disabled = true;
+    updateBadge();
+    if (guildSelect.value) await loadChannels(guildSelect.value);
+  });
+
+  channelSelect.addEventListener('change', () => {
+    localStorage.setItem('channelId', channelSelect.value);
+    updateBadge();
+  });
+
+  // ── Sound list ─────────────────────────────────────────────────────────────
+  async function loadSounds() {
+    try {
+      sounds = await apiFetch('/api/sounds');
+      renderGrid();
+    } catch (e) {
+      toast('Impossible de charger les sons : ' + e.message, 'error');
+    }
+  }
+
+  function renderGrid() {
+    soundGrid.innerHTML = '';
+    if (sounds.length === 0) {
+      soundGrid.innerHTML = '<p class="empty-state">Aucun son pour l\'instant.<br>Ajoutez-en via la zone de dépôt ci-dessus.</p>';
+      return;
+    }
+    sounds.forEach(name => {
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.dataset.name = name;
+
+      const icon = document.createElement('div');
+      icon.className = 'sound-icon';
+      icon.textContent = '🔊';
+
+      const label = document.createElement('div');
+      label.className = 'sound-name';
+      label.textContent = name.replace(/\.[^.]+$/, ''); // strip extension
+
+      const del = document.createElement('button');
+      del.className = 'delete-btn';
+      del.title = 'Supprimer';
+      del.textContent = '✕';
+      del.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteSound(name, tile);
+      });
+
+      tile.append(icon, label, del);
+      tile.addEventListener('click', () => playTile(name, tile));
+      soundGrid.appendChild(tile);
+    });
+  }
+
+  // ── Play ───────────────────────────────────────────────────────────────────
+  async function playTile(filename, tile) {
+    const guildId   = guildSelect.value;
+    const channelId = channelSelect.value;
+
+    if (!guildId) {
+      toast('Sélectionnez un serveur Discord.', 'error');
+      return;
+    }
+
+    tile.classList.add('playing');
+
+    try {
+      await apiFetch('/api/play', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guildId, channelId: channelId || undefined, filename }),
+      });
+      toast(`▶ ${filename.replace(/\.[^.]+$/, '')}`, 'success');
+    } catch (e) {
+      toast('Erreur : ' + e.message, 'error');
+    } finally {
+      setTimeout(() => tile.classList.remove('playing'), 1000);
+    }
+  }
+
+  // ── Delete ─────────────────────────────────────────────────────────────────
+  async function deleteSound(name, tile) {
+    if (!confirm(`Supprimer « ${name} » ?`)) return;
+    try {
+      await apiFetch(`/api/sounds/${encodeURIComponent(name)}`, { method: 'DELETE' });
+      sounds = sounds.filter(s => s !== name);
+      tile.remove();
+      if (sounds.length === 0) renderGrid();
+      toast(`${name} supprimé.`);
+    } catch (e) {
+      toast('Impossible de supprimer : ' + e.message, 'error');
+    }
+  }
+
+  // ── Upload ─────────────────────────────────────────────────────────────────
+  async function uploadFiles(files) {
+    if (!files.length) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'uploading-overlay';
+    overlay.innerHTML = '<div class="uploading-box">⏳ Upload en cours…</div>';
+    document.body.appendChild(overlay);
+
+    let ok = 0, fail = 0;
+
+    for (const file of files) {
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const { name } = await apiFetch('/api/sounds', { method: 'POST', body: fd });
+        if (!sounds.includes(name)) sounds.push(name);
+        ok++;
+      } catch (e) {
+        toast(`Échec pour ${file.name} : ${e.message}`, 'error');
+        fail++;
+      }
+    }
+
+    overlay.remove();
+    if (ok > 0) {
+      renderGrid();
+      toast(`${ok} fichier(s) ajouté(s).`, 'success');
+    }
+  }
+
+  // Drag & drop
+  uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragging'); });
+  uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragging'));
+  uploadZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadZone.classList.remove('dragging');
+    uploadFiles([...e.dataTransfer.files]);
+  });
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    uploadFiles([...fileInput.files]);
+    fileInput.value = '';
+  });
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  loadGuilds();
+  loadSounds();
+</script>
+</body>
+</html>

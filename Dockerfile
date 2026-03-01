@@ -28,10 +28,18 @@ COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+COPY src/public ./dist/public
 
 ENV NODE_ENV=production
 # Point the player utility to the system yt-dlp binary
 ENV YTDLP_PATH=/usr/bin/yt-dlp
+# Web interface port
+ENV WEB_PORT=3000
 
-# The bot is a long-running process — no port needed
+# Persistent volume for sound files
+VOLUME ["/app/sounds"]
+
+EXPOSE 3000
+
+# The bot is a long-running process
 CMD ["node", "dist/index.js"]

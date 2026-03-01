@@ -2,6 +2,7 @@ import { Client, Collection, GatewayIntentBits, Interaction } from 'discord.js';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import * as path from 'path';
+import { createWebServer } from './utils/webServer';
 
 dotenv.config();
 
@@ -78,3 +79,12 @@ if (!token) {
 }
 
 client.login(token);
+
+// Start web server once the bot is ready
+client.once('ready', () => {
+  const port = parseInt(process.env.WEB_PORT ?? '3000', 10);
+  const app = createWebServer(client);
+  app.listen(port, () => {
+    console.log(`[Soundboard] Interface web disponible sur http://localhost:${port}`);
+  });
+});
