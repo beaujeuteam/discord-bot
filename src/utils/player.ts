@@ -34,10 +34,21 @@ function isYouTubeUrl(url: string): boolean {
   }
 }
 
+function normalizeYouTubeUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    const videoId =
+      parsed.searchParams.get('v') ||
+      (parsed.hostname.includes('youtu.be') ? parsed.pathname.slice(1) : null);
+    if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+  } catch {}
+  return url;
+}
+
 async function getTitle(url: string): Promise<string> {
   if (isYouTubeUrl(url)) {
     try {
-      const info = await playdl.video_info(url);
+      const info = await playdl.video_info(normalizeYouTubeUrl(url));
       return info.video_details.title ?? url;
     } catch {
       return url;
@@ -69,7 +80,7 @@ async function playNext(guildId: string): Promise<void> {
   let resource;
 
   if (isYouTubeUrl(entry.url)) {
-    const stream = await playdl.stream(entry.url, { quality: 2 });
+    const stream = await playdl.stream(normalizeYouTubeUrl(entry.url), { quality: 2 });
     resource = createAudioResource(stream.stream, { inputType: stream.type });
   } else {
     const response = await fetch(entry.url);
