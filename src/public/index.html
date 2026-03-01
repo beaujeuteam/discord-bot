@@ -230,6 +230,9 @@
     @media (max-width: 480px) {
       .grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
     }
+
+    #status-badge {
+    }
   </style>
 </head>
 <body>
@@ -243,7 +246,6 @@
     <select id="channel-select" disabled>
       <option value="">-- Canal vocal --</option>
     </select>
-    <span class="badge" id="status-badge"></span>
   </div>
 </header>
 
@@ -263,7 +265,6 @@
 <script>
   const guildSelect   = document.getElementById('guild-select');
   const channelSelect = document.getElementById('channel-select');
-  const statusBadge   = document.getElementById('status-badge');
   const uploadZone    = document.getElementById('upload-zone');
   const fileInput     = document.getElementById('file-input');
   const soundGrid     = document.getElementById('sound-grid');
@@ -333,19 +334,8 @@
       if (saved && channels.find(c => c.id === saved)) {
         channelSelect.value = saved;
       }
-      updateBadge();
     } catch (e) {
       toast('Impossible de charger les canaux : ' + e.message, 'error');
-    }
-  }
-
-  function updateBadge() {
-    const gName = guildSelect.options[guildSelect.selectedIndex]?.text;
-    const cName = channelSelect.options[channelSelect.selectedIndex]?.text;
-    if (guildSelect.value && channelSelect.value) {
-      statusBadge.textContent = `${gName} › ${cName}`;
-    } else {
-      statusBadge.textContent = '';
     }
   }
 
@@ -353,13 +343,11 @@
     localStorage.setItem('guildId', guildSelect.value);
     channelSelect.innerHTML = '<option value="">-- Canal vocal --</option>';
     channelSelect.disabled = true;
-    updateBadge();
     if (guildSelect.value) await loadChannels(guildSelect.value);
   });
 
   channelSelect.addEventListener('change', () => {
     localStorage.setItem('channelId', channelSelect.value);
-    updateBadge();
   });
 
   // ── Sound list ─────────────────────────────────────────────────────────────
