@@ -293,7 +293,7 @@
     try {
       const guilds = await apiFetch('/api/guilds');
       guildSelect.innerHTML = '<option value="">-- Serveur --</option>';
-      guilds.forEach(((g, index) => {
+      guilds.forEach((g, index) => {
         const opt = document.createElement('option');
         opt.value = g.id;
         opt.textContent = g.name;
