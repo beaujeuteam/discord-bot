@@ -12,6 +12,7 @@
   "private": true,
   "dependencies": {
     "@discordjs/rest": "^2.6.0",
+    "@mistralai/mistralai": "^1.14.1",
     "discord-api-types": "^0.38.40",
     "discord.js": "^14.25.1",
     "dotenv": "^17.3.1"
