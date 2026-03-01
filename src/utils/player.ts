@@ -1,13 +1,12 @@
 import {
   AudioPlayer,
   AudioPlayerStatus,
-  VoiceConnection,
   createAudioPlayer,
   createAudioResource,
   getVoiceConnection,
   NoSubscriberBehavior,
 } from '@discordjs/voice';
-import ytdl from '@distube/ytdl-core';
+import * as playdl from 'play-dl';
 import fetch from 'node-fetch';
 import { URL } from 'url';
 
@@ -35,25 +34,15 @@ function isYouTubeUrl(url: string): boolean {
   }
 }
 
-function isFileUrl(url: string): boolean {
-  try {
-    const parsed = new URL(url);
-    return parsed.protocol === 'file:' || /\.(mp3|wav|ogg|flac|aac|m4a|webm)$/i.test(parsed.pathname);
-  } catch {
-    return false;
-  }
-}
-
 async function getTitle(url: string): Promise<string> {
   if (isYouTubeUrl(url)) {
     try {
-      const info = await ytdl.getBasicInfo(url);
-      return info.videoDetails.title;
+      const info = await playdl.video_info(url);
+      return info.video_details.title ?? url;
     } catch {
       return url;
     }
   }
-  // For direct files, extract filename from URL
   try {
     const parsed = new URL(url);
     const parts = parsed.pathname.split('/');
@@ -80,14 +69,9 @@ async function playNext(guildId: string): Promise<void> {
   let resource;
 
   if (isYouTubeUrl(entry.url)) {
-    const stream = ytdl(entry.url, {
-      filter: 'audioonly',
-      quality: 'highestaudio',
-      highWaterMark: 1 << 25,
-    });
-    resource = createAudioResource(stream);
+    const stream = await playdl.stream(entry.url, { quality: 2 });
+    resource = createAudioResource(stream.stream, { inputType: stream.type });
   } else {
-    // Direct file URL or audio file: fetch as stream
     const response = await fetch(entry.url);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     resource = createAudioResource(response.body as any);
@@ -125,7 +109,6 @@ export async function addToQueue(
   guildQueue.queue.push(entry);
   const position = guildQueue.queue.length;
 
-  // Start playing immediately if the player is idle
   if (guildQueue.player.state.status === AudioPlayerStatus.Idle) {
     await playNext(guildId);
   }
