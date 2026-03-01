@@ -148,3 +148,13 @@ export function stopPlayer(guildId: string): void {
     guildQueues.delete(guildId);
   }
 }
+
+export function skipTrack(guildId: string): boolean {
+  const guildQueue = guildQueues.get(guildId);
+  if (!guildQueue) return false;
+
+  // Stopping the player triggers the AudioPlayerStatus.Idle event,
+  // which calls playNext() automatically.
+  guildQueue.player.stop();
+  return true;
+}
