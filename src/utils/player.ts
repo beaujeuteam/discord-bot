@@ -5,10 +5,17 @@ import {
   createAudioResource,
   getVoiceConnection,
   NoSubscriberBehavior,
+  StreamType,
 } from '@discordjs/voice';
-import * as playdl from 'play-dl';
-import fetch from 'node-fetch';
+import { spawn, execFile } from 'child_process';
+import { promisify } from 'util';
 import { URL } from 'url';
+
+const execFileAsync = promisify(execFile);
+
+// yt-dlp binary: prefer the up-to-date version in ~/.local/bin
+const YT_DLP = process.env.YTDLP_PATH ||
+  `${process.env.HOME}/.local/bin/yt-dlp`;
 
 interface QueueEntry {
   url: string;
@@ -22,42 +29,23 @@ interface GuildQueue {
 
 const guildQueues = new Map<string, GuildQueue>();
 
-function isYouTubeUrl(url: string): boolean {
+function isSupportedUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
-    return (
-      parsed.hostname.includes('youtube.com') ||
-      parsed.hostname.includes('youtu.be')
-    );
+    return parsed.protocol === 'https:' || parsed.protocol === 'http:';
   } catch {
     return false;
   }
 }
 
-function normalizeYouTubeUrl(url: string): string {
+export async function getTitle(url: string): Promise<string> {
   try {
-    const parsed = new URL(url);
-    const videoId =
-      parsed.searchParams.get('v') ||
-      (parsed.hostname.includes('youtu.be') ? parsed.pathname.slice(1) : null);
-    if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
-  } catch {}
-  return url;
-}
-
-async function getTitle(url: string): Promise<string> {
-  if (isYouTubeUrl(url)) {
-    try {
-      const info = await playdl.video_info(normalizeYouTubeUrl(url));
-      return info.video_details.title ?? url;
-    } catch {
-      return url;
-    }
-  }
-  try {
-    const parsed = new URL(url);
-    const parts = parsed.pathname.split('/');
-    return decodeURIComponent(parts[parts.length - 1]) || url;
+    const { stdout } = await execFileAsync(YT_DLP, [
+      '--no-playlist',
+      '--print', 'title',
+      url,
+    ]);
+    return stdout.trim() || url;
   } catch {
     return url;
   }
@@ -77,16 +65,35 @@ async function playNext(guildId: string): Promise<void> {
   }
 
   const entry = guildQueue.queue.shift()!;
-  let resource;
 
-  if (isYouTubeUrl(entry.url)) {
-    const stream = await playdl.stream(normalizeYouTubeUrl(entry.url), { quality: 2 });
-    resource = createAudioResource(stream.stream, { inputType: stream.type });
-  } else {
-    const response = await fetch(entry.url);
-    if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    resource = createAudioResource(response.body as any);
-  }
+  // yt-dlp streams the best audio format to stdout
+  const ytdlp = spawn(YT_DLP, [
+    '--no-playlist',
+    '-f', 'bestaudio',
+    '-o', '-',
+    '--quiet',
+    entry.url,
+  ]);
+
+  // ffmpeg transcodes to opus (required by Discord)
+  const ffmpeg = spawn('ffmpeg', [
+    '-i', 'pipe:0',
+    '-vn',
+    '-ar', '48000',
+    '-ac', '2',
+    '-f', 'opus',
+    '-b:a', '128k',
+    'pipe:1',
+  ], { stdio: ['pipe', 'pipe', 'ignore'] });
+
+  ytdlp.stdout.pipe(ffmpeg.stdin);
+
+  ytdlp.on('error', (err) => console.error('[yt-dlp]', err.message));
+  ffmpeg.on('error', (err) => console.error('[ffmpeg]', err.message));
+
+  const resource = createAudioResource(ffmpeg.stdout, {
+    inputType: StreamType.OggOpus,
+  });
 
   guildQueue.player.play(resource);
   connection.subscribe(guildQueue.player);
@@ -96,6 +103,8 @@ export async function addToQueue(
   guildId: string,
   url: string
 ): Promise<{ title: string; position: number }> {
+  if (!isSupportedUrl(url)) throw new Error(`URL non supportée : ${url}`);
+
   const title = await getTitle(url);
   const entry: QueueEntry = { url, title };
 
