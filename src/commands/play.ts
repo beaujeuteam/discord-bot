@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, CommandInteraction, GuildMember, ChatInputCommandInteraction } from 'discord.js';
+import { SlashCommandBuilder, GuildMember, ChatInputCommandInteraction } from 'discord.js';
 import { joinVoiceChannel, getVoiceConnection } from '@discordjs/voice';
 import { addToQueue } from '../utils/player';
 
@@ -56,14 +56,10 @@ module.exports = {
     try {
       const { title, position } = await addToQueue(interaction.guildId!, url);
 
-      if (position === 0) {
-        await interaction.editReply(`Lecture en cours : **${title}**`);
-      } else {
-        await interaction.editReply(`Ajouté à la file d'attente (#${position}) : **${title}**`);
-      }
+      await interaction.editReply(`Ajouté à la file d'attente (#${position}) : **${title}**`);
     } catch (err: any) {
       console.error('[/play]', err);
-      await interaction.editReply("Impossible de lire cette URL. Vérifiez qu'elle est valide et accessible.");
+      await interaction.editReply(`ERROR GrrrRRrr: ${err.message}`);
     }
   },
 };

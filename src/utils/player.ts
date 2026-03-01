@@ -133,7 +133,7 @@ export async function addToQueue(
     await playNext(guildId);
   }
 
-  return { title, position: position === 1 ? 0 : position };
+  return { title, position: position };
 }
 
 export function getQueue(guildId: string): QueueEntry[] {
