@@ -88,6 +88,9 @@ async function playNext(guildId: string): Promise<void> {
 
   ytdlp.stdout.pipe(ffmpeg.stdin);
 
+  //ytdlp.stdout.on('data', (data) => console.log('[yt-dlp]', `Data: ${data}`));
+  //ffmpeg.stdout.on('data', (data) => console.log('[ffmpeg]', `Data: ${data}`));
+
   ytdlp.on('error', (err) => console.error('[yt-dlp]', err.message));
   ffmpeg.on('error', (err) => console.error('[ffmpeg]', err.message));
 

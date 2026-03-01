@@ -23,6 +23,8 @@ module.exports = {
       channelId: voiceChannel.id,
       guildId: voiceChannel.guild.id,
       adapterCreator: voiceChannel.guild.voiceAdapterCreator,
+      selfMute: false,
+      selfDeaf: false,
     });
 
     await interaction.reply(`J'ai rejoint le salon **${voiceChannel.name}** !`);
