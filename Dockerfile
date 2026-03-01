@@ -26,7 +26,6 @@ WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --omit=dev
-RUN npm run deploy
 
 COPY --from=builder /app/dist ./dist
 
