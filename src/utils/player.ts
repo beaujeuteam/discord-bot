@@ -25,6 +25,7 @@ interface QueueEntry {
 interface GuildQueue {
   player: AudioPlayer;
   queue: QueueEntry[];
+  current: QueueEntry | null;
 }
 
 const guildQueues = new Map<string, GuildQueue>();
@@ -65,6 +66,7 @@ async function playNext(guildId: string): Promise<void> {
   }
 
   const entry = guildQueue.queue.shift()!;
+  guildQueue.current = entry;
 
   // yt-dlp streams the best audio format to stdout
   const ytdlp = spawn(YT_DLP, [
@@ -122,7 +124,7 @@ export async function addToQueue(
       playNext(guildId);
     });
 
-    guildQueues.set(guildId, { player, queue: [] });
+    guildQueues.set(guildId, { player, queue: [], current: null });
   }
 
   const guildQueue = guildQueues.get(guildId)!;
@@ -138,6 +140,10 @@ export async function addToQueue(
 
 export function getQueue(guildId: string): QueueEntry[] {
   return guildQueues.get(guildId)?.queue ?? [];
+}
+
+export function getCurrentTrack(guildId: string): QueueEntry | null {
+  return guildQueues.get(guildId)?.current ?? null;
 }
 
 export function stopPlayer(guildId: string): void {
