@@ -293,12 +293,16 @@
     try {
       const guilds = await apiFetch('/api/guilds');
       guildSelect.innerHTML = '<option value="">-- Serveur --</option>';
-      guilds.forEach(g => {
+      guilds.forEach(((g, index) => {
         const opt = document.createElement('option');
         opt.value = g.id;
         opt.textContent = g.name;
-        opt.selected = true;
         guildSelect.appendChild(opt);
+
+        if (index === 0) {
+          guildSelect.value = g.id;
+          loadChannels(g.id);
+        }
       });
       // Restore saved selection
       const saved = localStorage.getItem('guildId');
